@@ -6,12 +6,12 @@ using Xunit;
 
 namespace MetricsManagerTests
 {
-    public class HddControllerUnitTests
+    public class RamControllerUnitTests
     {
-        private HddMetricsController _controller;
-        public HddControllerUnitTests()
+        private RamMetricsController _controller;
+        public RamControllerUnitTests()
         {
-            _controller = new HddMetricsController();
+            _controller = new RamMetricsController();
         }
 
         [Fact]
@@ -19,10 +19,13 @@ namespace MetricsManagerTests
         {
             //Arrange
             var agentId = 1;
+            var fromTime = TimeSpan.FromSeconds(0);
+            var toTime = TimeSpan.FromSeconds(100);
             //Act
-            var result = _controller.GetMetricsFromAgent(agentId);
+            var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
             //Assert
             _ = Assert.IsAssignableFrom<IActionResult>(result);
         }
     }
 }
+

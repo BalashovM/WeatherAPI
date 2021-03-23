@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using MetricsManager.Controllers;
 using MetricsManager.Enums;
@@ -6,12 +6,12 @@ using Xunit;
 
 namespace MetricsManagerTests
 {
-    public class CpuControllerUnitTests
+    public class NetworkControllerUnitTests
     {
-        private CpuMetricsController _controller;
-        public CpuControllerUnitTests()
+        private NetworkMetricsController _controller;
+        public NetworkControllerUnitTests()
         {
-            _controller = new CpuMetricsController();
+            _controller = new NetworkMetricsController();
         }
 
         [Fact]

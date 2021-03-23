@@ -1,4 +1,5 @@
-﻿namespace WeatherAPI.Enums
+﻿
+namespace MetricsManager.Enums
 {
     public enum Percentile
     {
