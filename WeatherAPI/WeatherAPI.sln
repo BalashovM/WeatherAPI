@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeatherAPI", "WeatherAPI\We
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetricsManagerTests", "MetricsManagerTests\MetricsManagerTests.csproj", "{CC62F0B2-21F3-4258-8973-B8573C6FF69E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsManager", "MetricsManager\MetricsManager.csproj", "{0A98E133-1DF8-41C9-B639-EFAEE5798717}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetricsManager", "MetricsManager\MetricsManager.csproj", "{0A98E133-1DF8-41C9-B639-EFAEE5798717}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsAgent", "MetricsAgent\MetricsAgent.csproj", "{5BF065E1-5CA8-4C25-9C96-C07F0301F330}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetricsAgent", "MetricsAgent\MetricsAgent.csproj", "{5BF065E1-5CA8-4C25-9C96-C07F0301F330}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsAgentTests", "MetricsAgentTests\MetricsAgentTests.csproj", "{6B92CEC1-BC00-4645-9A66-4E544630CEFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{5BF065E1-5CA8-4C25-9C96-C07F0301F330}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BF065E1-5CA8-4C25-9C96-C07F0301F330}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BF065E1-5CA8-4C25-9C96-C07F0301F330}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B92CEC1-BC00-4645-9A66-4E544630CEFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B92CEC1-BC00-4645-9A66-4E544630CEFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B92CEC1-BC00-4645-9A66-4E544630CEFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B92CEC1-BC00-4645-9A66-4E544630CEFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
