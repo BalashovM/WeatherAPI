@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using MetricsManager.Controllers;
-using MetricsManager.Enums;
+using MetricsLibrary;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace MetricsManagerTests
 {
     public class CpuControllerUnitTests
     {
         private CpuMetricsController _controller;
+        private ILogger<CpuMetricsController> _logger;
+
         public CpuControllerUnitTests()
         {
-            _controller = new CpuMetricsController();
+            _controller = new CpuMetricsController(_logger);
         }
 
         [Fact]

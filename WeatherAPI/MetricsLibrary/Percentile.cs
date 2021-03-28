@@ -1,5 +1,6 @@
-﻿
-namespace MetricsManager.Enums
+﻿using System;
+
+namespace MetricsLibrary
 {
     public enum Percentile
     {

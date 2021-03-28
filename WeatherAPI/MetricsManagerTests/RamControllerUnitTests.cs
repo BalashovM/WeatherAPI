@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MetricsManager.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using System;
-using MetricsManager.Controllers;
-using MetricsManager.Enums;
 using Xunit;
 
 namespace MetricsManagerTests
