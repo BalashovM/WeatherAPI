@@ -7,8 +7,8 @@ namespace MetricsAgent.DAL
 {
     public interface IDotNetMetricsRepository : IRepository<DotNetMetric>
     {
-        IList<DotNetMetric> GetMetricsFromTimeToTime(TimeSpan fromTime, TimeSpan toTime);
-        IList<DotNetMetric> GetMetricsFromTimeToTimeOrderBy(TimeSpan fromTime, TimeSpan toTime, string sortingField);
+        IList<DotNetMetric> GetByPeriod(TimeSpan fromTime, TimeSpan toTime);
+        IList<DotNetMetric> GetByPeriodWithSort(TimeSpan fromTime, TimeSpan toTime, string sortingField);
     }
 
     public class DotNetMetricsRepository : IDotNetMetricsRepository
@@ -103,7 +103,7 @@ namespace MetricsAgent.DAL
             }
         }
 
-        public IList<DotNetMetric> GetMetricsFromTimeToTime(TimeSpan fromTime, TimeSpan toTime)
+        public IList<DotNetMetric> GetByPeriod(TimeSpan fromTime, TimeSpan toTime)
         {
             using var cmd = new SQLiteCommand(_connection);
 
@@ -128,7 +128,7 @@ namespace MetricsAgent.DAL
             return returnList;
         }
         
-        public IList<DotNetMetric> GetMetricsFromTimeToTimeOrderBy(TimeSpan fromTime, TimeSpan toTime, string sortingField)
+        public IList<DotNetMetric> GetByPeriodWithSort(TimeSpan fromTime, TimeSpan toTime, string sortingField)
         {
             using var cmd = new SQLiteCommand(_connection);
 

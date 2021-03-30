@@ -7,8 +7,8 @@ namespace MetricsAgent.DAL
 {
     public interface ICpuMetricsRepository : IRepository<CpuMetric>
     {
-        IList<CpuMetric> GetMetricsFromTimeToTime(TimeSpan fromTime, TimeSpan toTime);
-        IList<CpuMetric> GetMetricsFromTimeToTimeOrderBy(TimeSpan fromTime, TimeSpan toTime, string sortingField);
+        IList<CpuMetric> GetByPeriod(TimeSpan fromTime, TimeSpan toTime);
+        IList<CpuMetric> GetByPeriodWithSort(TimeSpan fromTime, TimeSpan toTime, string sortingField);
     }
 
     public class CpuMetricsRepository : ICpuMetricsRepository
@@ -104,7 +104,7 @@ namespace MetricsAgent.DAL
                 }
             }
         }
-        public IList<CpuMetric> GetMetricsFromTimeToTime(TimeSpan fromTime, TimeSpan toTime)
+        public IList<CpuMetric> GetByPeriod(TimeSpan fromTime, TimeSpan toTime)
         {
             using var cmd = new SQLiteCommand(_connection);
 
@@ -129,7 +129,7 @@ namespace MetricsAgent.DAL
             return returnList;
         }
 
-        public IList<CpuMetric> GetMetricsFromTimeToTimeOrderBy(TimeSpan fromTime, TimeSpan toTime, string sortingField)
+        public IList<CpuMetric> GetByPeriodWithSort(TimeSpan fromTime, TimeSpan toTime, string sortingField)
         {
             using var cmd = new SQLiteCommand(_connection);
             cmd.CommandText = "SELECT * FROM cpumetrics WHERE time > @timeFrom AND time < @timeTo ORDER BY @sortingField";

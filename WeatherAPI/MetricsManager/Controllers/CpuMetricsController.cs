@@ -1,7 +1,10 @@
 ﻿using MetricsLibrary;
+using MetricsManager.DAL;
+using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 
 namespace MetricsManager.Controllers
 {
@@ -10,9 +13,11 @@ namespace MetricsManager.Controllers
     public class CpuMetricsController : ControllerBase
     {
         private readonly ILogger<CpuMetricsController> _logger;
+        private ICpuMetricsRepository _repository;
 
-        public CpuMetricsController(ILogger<CpuMetricsController> logger)
+        public CpuMetricsController(ICpuMetricsRepository repository, ILogger<CpuMetricsController> logger)
         {
+            _repository = repository;
             _logger = logger;
             _logger.LogDebug(1, "NLog встроен в CpuMetricsController");
         }
@@ -23,8 +28,29 @@ namespace MetricsManager.Controllers
             [FromRoute] TimeSpan fromTime, 
             [FromRoute] TimeSpan toTime)
         {
-            _logger.LogInformation("Привет! Это наше первое сообщение в лог");
-            return Ok();
+            var metrics = _repository.GetByPeriodFromAgent(fromTime, toTime, agentId);
+            var response = new AllCpuMetricsFromAgentResponse()
+            {
+                Metrics = new List<CpuMetricManagerDto>()
+            };
+
+            foreach (var metric in metrics)
+            {
+                response.Metrics.Add(new CpuMetricManagerDto
+                {
+                    Time = metric.Time,
+                    Value = metric.Value,
+                    Id = metric.Id,
+                    IdAgent = metric.IdAgent
+                });
+            }
+
+            if (_logger != null)
+            {
+                _logger.LogInformation("Запрос метрик Cpu FromPeriod для агента");
+            }
+
+            return Ok(response);
         }
 
         [HttpGet("agent/{agentId}/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
@@ -34,7 +60,31 @@ namespace MetricsManager.Controllers
             [FromRoute] TimeSpan toTime, 
             [FromRoute] Percentile percentile)
         {
-            return Ok();
+            var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
+            if (metrics.Count == 0) return NoContent();
+
+            int percentileThisList = (int)percentile;
+            percentileThisList = percentileThisList * metrics.Count / 100;
+
+            var response = new AllCpuMetricsFromAgentResponse()
+            {
+                Metrics = new List<CpuMetricManagerDto>()
+            };
+
+            response.Metrics.Add(new CpuMetricManagerDto
+            {
+                Time = metrics[percentileThisList].Time,
+                Value = metrics[percentileThisList].Value,
+                Id = metrics[percentileThisList].Id,
+                IdAgent = metrics[percentileThisList].IdAgent
+            });
+
+            if (_logger != null)
+            {
+                _logger.LogInformation("Запрос percentile Cpu FromPeriod для агента");
+            }
+
+            return Ok(response);
         }
 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}")]
@@ -42,7 +92,29 @@ namespace MetricsManager.Controllers
             [FromRoute] TimeSpan fromTime, 
             [FromRoute] TimeSpan toTime)
         {
-            return Ok();
+            var metrics = _repository.GetByPeriod(fromTime, toTime);
+            var response = new AllCpuMetricsFromAgentResponse()
+            {
+                Metrics = new List<CpuMetricManagerDto>()
+            };
+
+            foreach (var metric in metrics)
+            {
+                response.Metrics.Add(new CpuMetricManagerDto
+                {
+                    Time = metric.Time,
+                    Value = metric.Value,
+                    Id = metric.Id,
+                    IdAgent = metric.IdAgent
+                });
+            }
+
+            if (_logger != null)
+            {
+                _logger.LogInformation("Запрос метрик Cpu FromPeriod для кластера");
+            }
+
+            return Ok(response);
         }
 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
@@ -51,7 +123,32 @@ namespace MetricsManager.Controllers
             [FromRoute] TimeSpan toTime, 
             [FromRoute] Percentile percentile)
         {
-            return Ok();
+            var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
+            if (metrics.Count == 0) return NoContent();
+
+            int percentileThisList = (int)percentile;
+            percentileThisList = percentileThisList * metrics.Count / 100;
+
+            var response = new AllCpuMetricsFromAgentResponse()
+            {
+                Metrics = new List<CpuMetricManagerDto>()
+            };
+
+            response.Metrics.Add(new CpuMetricManagerDto
+            {
+                Time = metrics[percentileThisList].Time,
+                Value = metrics[percentileThisList].Value,
+                Id = metrics[percentileThisList].Id,
+                IdAgent = metrics[percentileThisList].IdAgent
+            });
+
+            if (_logger != null)
+            {
+                _logger.LogInformation("Запрос percentile Cpu FromPeriod для кластера");
+            }
+
+            return Ok(response);
         }
     }
+
 }

@@ -1,12 +1,10 @@
 ﻿using MetricsAgent.DAL;
+using MetricsAgent.Responses;
+using MetricsLibrary;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
-using MetricsAgent.Models;
-using MetricsLibrary;
-using Microsoft.Extensions.Logging;
-using MetricsAgent.Responses;
 
 namespace MetricsAgent.Controllers
 {
@@ -28,7 +26,7 @@ namespace MetricsAgent.Controllers
 			   [FromRoute] TimeSpan fromTime,
 			   [FromRoute] TimeSpan toTime)
 		{
-            var metrics = _repository.GetMetricsFromTimeToTime(fromTime, toTime);
+            var metrics = _repository.GetByPeriod(fromTime, toTime);
             var response = new AllCpuMetricsResponse()
             {
                 Metrics = new List<CpuMetricDto>()
@@ -58,7 +56,7 @@ namespace MetricsAgent.Controllers
 			[FromRoute] TimeSpan toTime,
 			[FromRoute] Percentile percentile)
 		{
-            var metrics = _repository.GetMetricsFromTimeToTimeOrderBy(fromTime, toTime, "value");
+            var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
             int percentileThisList = (int)percentile;

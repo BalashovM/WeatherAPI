@@ -32,8 +32,6 @@ namespace MetricsManager
                 // остановка логера 
                 NLog.LogManager.Shutdown();
             }
-
-            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

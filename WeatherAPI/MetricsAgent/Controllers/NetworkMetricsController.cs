@@ -26,7 +26,7 @@ namespace MetricsAgent.Controllers
             [FromRoute] TimeSpan fromTime,
             [FromRoute] TimeSpan toTime)
         {
-            var metrics = _repository.GetMetricsFromTimeToTime(fromTime, toTime);
+            var metrics = _repository.GetByPeriod(fromTime, toTime);
             var response = new AllNetworkMetricsResponse()
             {
                 Metrics = new List<NetworkMetricDto>()
@@ -56,7 +56,7 @@ namespace MetricsAgent.Controllers
             [FromRoute] TimeSpan toTime,
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetMetricsFromTimeToTimeOrderBy(fromTime, toTime, "value");
+            var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
             int percentileThisList = (int)percentile;
