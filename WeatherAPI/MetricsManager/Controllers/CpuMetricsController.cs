@@ -63,8 +63,14 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            HashSet<int> values = new HashSet<int>();
+
+            foreach (var metric in metrics)
+            {
+                values.Add(metric.Value);
+            }
+
+            int percentileThisList = PercentileCalc(new List<int>(values).ToArray(), (double)percentile / 100.0);
 
             var response = new AllCpuMetricsFromAgentResponse()
             {
@@ -126,8 +132,14 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            HashSet<int> values = new HashSet<int>();
+
+            foreach (var metric in metrics)
+            {
+                values.Add(metric.Value);
+            }
+
+            int percentileThisList = PercentileCalc(new List<int>(values).ToArray(), (double)percentile / 100.0);
 
             var response = new AllCpuMetricsFromAgentResponse()
             {
@@ -149,6 +161,21 @@ namespace MetricsManager.Controllers
 
             return Ok(response);
         }
-    }
+        private int PercentileCalc(int[] sequence, double PercentileValue)
+        {
+            Array.Sort(sequence);
+            int N = sequence.Length;
+            double n = (N - 1) * PercentileValue + 1;
 
+            if (n == 1d) return sequence[0];
+            else if (n == N) return sequence[N - 1];
+            else
+            {
+                int k = (int)n;
+                double d = n - k;
+
+                return Array.Find(sequence, p => p > (sequence[k - 1] + d * (sequence[k] - sequence[k - 1])));
+            }
+        }
+    }
 }
