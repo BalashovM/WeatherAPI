@@ -39,7 +39,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос метрик Hdd");
+                _logger.LogInformation("Запрос метрик Hdd FreeSize");
             }
 
             return Ok(response);

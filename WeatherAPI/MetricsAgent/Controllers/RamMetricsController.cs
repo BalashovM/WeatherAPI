@@ -39,7 +39,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос метрик Available RAM");
+                _logger.LogInformation("Запрос метрик RAM Available");
             }
 
             return Ok(response);

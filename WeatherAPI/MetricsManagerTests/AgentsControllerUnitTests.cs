@@ -10,14 +10,15 @@ namespace MetricsManagerTests
 {
     public class AgentsControllerUnitTests
     {
-        private ILogger<AgentsController> _logger;
         private AgentsController _controller;
+        private Mock<ILogger<AgentsController>> _logger;
         private Mock<IAgentsRepository> _mock;
 
         public AgentsControllerUnitTests()
         {
+            _logger = new Mock<ILogger<AgentsController>>();
             _mock = new Mock<IAgentsRepository>();
-            _controller = new AgentsController(_mock.Object, _logger);
+            _controller = new AgentsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -29,6 +30,7 @@ namespace MetricsManagerTests
             var result = _controller.RegisterAgent(new AgentModel());
             //Assert
             _mock.Verify(repository => repository.Create(new AgentModel()), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -40,6 +42,7 @@ namespace MetricsManagerTests
             var result = _controller.EnableAgentById(0);
             //Assert
             _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -51,6 +54,7 @@ namespace MetricsManagerTests
             var result = _controller.DisableAgentById(0);
             //Assert
             _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -62,6 +66,7 @@ namespace MetricsManagerTests
             var result = _controller.GetAll();
             //Assert
             _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }

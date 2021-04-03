@@ -13,13 +13,14 @@ namespace MetricsManagerTests
     public class RamControllerUnitTests
     {
         private RamMetricsController _controller;
-        private ILogger<RamMetricsController> _logger;
+        private Mock<ILogger<RamMetricsController>> _logger;
         private Mock<IRamMetricsRepository> _mock;
 
         public RamControllerUnitTests()
         {
+            _logger = new Mock<ILogger<RamMetricsController>>();
             _mock = new Mock<IRamMetricsRepository>();
-            _controller = new RamMetricsController(_mock.Object, _logger);
+            _controller = new RamMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]

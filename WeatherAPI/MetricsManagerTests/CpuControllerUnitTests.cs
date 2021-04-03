@@ -13,13 +13,14 @@ namespace MetricsManagerTests
     public class CpuControllerUnitTests
     {
         private CpuMetricsController _controller;
-        private ILogger<CpuMetricsController> _logger;
+        private Mock<ILogger<CpuMetricsController>> _logger;
         private Mock<ICpuMetricsRepository> _mock;
 
         public CpuControllerUnitTests()
         {
+            _logger = new Mock<ILogger<CpuMetricsController>>();
             _mock = new Mock<ICpuMetricsRepository>();
-            _controller = new CpuMetricsController(_mock.Object, _logger);
+            _controller = new CpuMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -34,6 +35,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodFromAgent(fromTime, toTime, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -50,6 +52,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -63,6 +66,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -79,6 +83,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromAllCluster(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }

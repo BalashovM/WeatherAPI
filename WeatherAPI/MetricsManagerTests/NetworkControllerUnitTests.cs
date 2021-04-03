@@ -13,13 +13,14 @@ namespace MetricsManagerTests
     public class NetworkControllerUnitTests
     {
         private NetworkMetricsController _controller;
-        private ILogger<NetworkMetricsController> _logger;
+        private Mock<ILogger<NetworkMetricsController>> _logger;
         private Mock<INetworkMetricsRepository> _mock;
 
         public NetworkControllerUnitTests()
         {
+            _logger = new Mock<ILogger<NetworkMetricsController>>();
             _mock = new Mock<INetworkMetricsRepository>();
-            _controller = new NetworkMetricsController(_mock.Object, _logger);
+            _controller = new NetworkMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -34,6 +35,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodFromAgent(fromTime, toTime, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -50,6 +52,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -63,6 +66,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -78,6 +82,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromAllCluster(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }

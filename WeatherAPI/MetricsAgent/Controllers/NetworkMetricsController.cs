@@ -44,7 +44,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос метрик Network FromTimeToTime");
+                _logger.LogInformation("Запрос метрик Network за период");
             }
 
             return Ok(response);
@@ -76,7 +76,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос percentile Network FromTimeToTime");
+                _logger.LogInformation("Запрос percentile Network за период");
             }
 
             return Ok(response);

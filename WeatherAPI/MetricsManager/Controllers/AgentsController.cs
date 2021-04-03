@@ -29,7 +29,11 @@ namespace MetricsManager.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Добавление в базу агента");
+                _logger.LogInformation("Добавление в базу агента: " +
+                                   $"Id = {agentInfo.Id}" +
+                                   $" IpAddress = {agentInfo.IpAddress}" +
+                                   $" Name = {agentInfo.Name}" +
+                                   $" Status = {agentInfo.Status}");
             }
             return Ok();
         }

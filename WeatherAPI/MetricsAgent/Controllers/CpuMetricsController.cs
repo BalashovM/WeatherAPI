@@ -44,7 +44,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос метрик Cpu FromTimeToTime");
+                _logger.LogInformation("Запрос метрик Cpu за период");
             }
 
             return Ok();
@@ -76,7 +76,7 @@ namespace MetricsAgent.Controllers
 
             if (_logger != null)
             {
-                _logger.LogInformation("Запрос percentile Cpu FromTimeToTime");
+                _logger.LogInformation("Запрос percentile Cpu за период");
             }
 
             return Ok(response);

@@ -13,13 +13,14 @@ namespace MetricsManagerTests
     public class HddControllerUnitTests
     {
         private HddMetricsController _controller;
-        private ILogger<HddMetricsController> _logger;
+        private Mock<ILogger<HddMetricsController>> _logger;
         private Mock<IHddMetricsRepository> _mock;
 
         public HddControllerUnitTests()
         {
+            _logger = new Mock<ILogger<HddMetricsController>>();
             _mock = new Mock<IHddMetricsRepository>();
-            _controller = new HddMetricsController(_mock.Object, _logger);
+            _controller = new HddMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -34,6 +35,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodFromAgent(fromTime, toTime, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -51,6 +53,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -64,6 +67,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -80,6 +84,7 @@ namespace MetricsManagerTests
             var result = _controller.GetMetricsByPercentileFromCluster(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }
