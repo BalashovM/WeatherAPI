@@ -1,51 +1,72 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using MetricsManager.Controllers;
-using MetricsManager.Enums;
+﻿using MetricsManager.Controllers;
+using MetricsManager.DAL;
+using MetricsManager.Models;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.Collections.Generic;
 using Xunit;
-using MetricsManager;
 
 namespace MetricsManagerTests
 {
     public class AgentsControllerUnitTests
     {
         private AgentsController _controller;
+        private Mock<ILogger<AgentsController>> _logger;
+        private Mock<IAgentsRepository> _mock;
+
         public AgentsControllerUnitTests()
         {
-            _controller = new AgentsController();
+            _logger = new Mock<ILogger<AgentsController>>();
+            _mock = new Mock<IAgentsRepository>();
+            _controller = new AgentsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
-        public void RegisterAgent_ReturnsOk()
+        public void RegisterCheckRequestCreate()
         {
             //Arrange
-            var agentInfo = new AgentInfo();
+            _mock.Setup(a => a.Create(new AgentModel())).Verifiable();
             //Act
-            var result = _controller.RegisterAgent(agentInfo);
+            var result = _controller.RegisterAgent(new AgentModel());
             //Assert
-            _ = Assert.IsAssignableFrom<IActionResult>(result);
+            _mock.Verify(repository => repository.Create(new AgentModel()), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
-        public void EnableAgentById_ReturnsOk()
+        public void EnableAgentByIdCheckRequestCreate()
         {
             //Arrange
-            var agentId = 1;
+            _mock.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
             //Act
-            var result = _controller.EnableAgentById(agentId);
+            var result = _controller.EnableAgentById(0);
             //Assert
-            _ = Assert.IsAssignableFrom<IActionResult>(result);
+            _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
-        public void GetRegistredObjects_ReturnsOk()
+        public void DisableAgentByIdCheckRequestCreate()
         {
             //Arrange
-            
+            _mock.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
             //Act
-            var result = _controller.GetRegistredObjects();
+            var result = _controller.DisableAgentById(0);
             //Assert
-            _ = Assert.IsAssignableFrom<IActionResult>(result);
+            _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _logger.Verify();
+        }
+
+        [Fact]
+        public void GetAllAgentsCheckRequestCreate()
+        {
+            //Arrange
+            _mock.Setup(a => a.GetAll()).Returns(new List<AgentModel>()).Verifiable();
+            //Act
+            var result = _controller.GetAll();
+            //Assert
+            _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }

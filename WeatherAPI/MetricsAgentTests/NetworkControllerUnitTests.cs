@@ -1,30 +1,63 @@
 ﻿using MetricsAgent.Controllers;
-using Microsoft.AspNetCore.Mvc;
+using MetricsAgent.DAL;
+using MetricsAgent.Models;
+using MetricsLibrary;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MetricsAgentTests
 {
     public class NetworkControllerUnitTests
     {
-        private NetworkMetricsController controller;
+        private readonly NetworkMetricsController _controller;
+        private readonly Mock<INetworkMetricsRepository> _mock;
+        private readonly Mock<ILogger<NetworkMetricsController>> _logger;
+
         public NetworkControllerUnitTests()
         {
-            controller = new NetworkMetricsController();
+            _mock = new Mock<INetworkMetricsRepository>();
+            _logger = new Mock<ILogger<NetworkMetricsController>>();
+            _controller = new NetworkMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
-        public void GetMetricsFromAgent_ReturnsOk()
+        public void GetByPeriodCheckRequestSelect()
         {
             //Arrange
-            var fromTime = TimeSpan.FromSeconds(0);
-            var toTime = TimeSpan.FromSeconds(100);
-
+            TimeSpan fromTime = TimeSpan.FromSeconds(1);
+            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            _mock.Setup(a => a.GetByPeriod(fromTime, toTime)).Returns(new List<NetworkMetric>()).Verifiable();
             //Act
-            var result = controller.GetMetricsFromAgent(fromTime, toTime);
+            var result = _controller.GetMetricsFromAgent(fromTime, toTime);
+            //Assert
+            _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+        }
 
-            // Assert
-            _ = Assert.IsAssignableFrom<IActionResult>(result);
+        [Fact]
+        public void GetByPeriodWithSortPercentileCheckRequestSelect()
+        {
+            //Arrange
+            TimeSpan fromTime = TimeSpan.FromSeconds(1);
+            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            Percentile percentile = Percentile.P99;
+            string sort = "value";
+            _mock.Setup(a => a.GetByPeriodWithSort(fromTime, toTime, sort)).Returns(new List<NetworkMetric>()).Verifiable();
+            //Act
+            var result = _controller.GetMetricsByPercentileFromAgent(fromTime, toTime, percentile);
+            //Assert
+            _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+        }
+
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<NetworkMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<NetworkMetric>()), Times.AtMostOnce());
         }
     }
 }
