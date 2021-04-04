@@ -12,14 +12,15 @@ namespace MetricsAgentTests
 {
     public class CpuControllerUnitTests
     {
-        private ILogger<CpuMetricsController> _logger;
-        private CpuMetricsController _controller;
-        private Mock<ICpuMetricsRepository> _mock;
+        private readonly CpuMetricsController _controller;
+        private readonly Mock<ICpuMetricsRepository> _mock;
+        private readonly Mock<ILogger<CpuMetricsController>> _logger;
 
         public CpuControllerUnitTests()
         {
             _mock = new Mock<ICpuMetricsRepository>();
-            _controller = new CpuMetricsController(_mock.Object, _logger);
+            _logger = new Mock<ILogger<CpuMetricsController>>();
+            _controller = new CpuMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -49,6 +50,15 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsByPercentileFromAgent(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+        }
+
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<CpuMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<CpuMetric>()), Times.AtMostOnce());
         }
     }
 }

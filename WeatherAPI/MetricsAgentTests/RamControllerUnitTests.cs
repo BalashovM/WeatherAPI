@@ -10,14 +10,15 @@ namespace MetricsAgentTests
 {
     public class RamControllerUnitTests
     {
-        private ILogger<RamMetricsController> _logger;
-        private RamMetricsController _controller;
-        private Mock<IRamMetricsRepository> _mock;
+        private  RamMetricsController _controller;
+        private readonly Mock<IRamMetricsRepository> _mock;
+        private readonly Mock<ILogger<RamMetricsController>> _logger;
 
         public RamControllerUnitTests()
         {
             _mock = new Mock<IRamMetricsRepository>();
-            _controller = new RamMetricsController(_mock.Object, _logger);
+            _logger = new Mock<ILogger<RamMetricsController>>();
+            _controller = new RamMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -29,6 +30,15 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsFromAgent();
             // Assert
             _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+        }
+
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<RamMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<RamMetric>()), Times.AtMostOnce());
         }
     }
 }

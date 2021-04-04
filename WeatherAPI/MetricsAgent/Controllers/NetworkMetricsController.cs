@@ -1,10 +1,12 @@
 ﻿using MetricsAgent.DAL;
+using MetricsAgent.Models;
 using MetricsAgent.Responses;
 using MetricsLibrary;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MetricsAgent.Controllers
 {
@@ -59,14 +61,7 @@ namespace MetricsAgent.Controllers
             var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
-            HashSet<int> values = new HashSet<int>();
-
-            foreach (var metric in metrics)
-            {
-                values.Add(metric.Value);
-            }
-
-            int percentileThisList = PercentileCalc(new List<int>(values).ToArray(), (double)percentile / 100.0);
+            var percentileMetric = metrics.Cast<NetworkMetric>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllNetworkMetricsResponse()
             {
@@ -75,9 +70,9 @@ namespace MetricsAgent.Controllers
 
             response.Metrics.Add(new NetworkMetricDto
             {
-                Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id
+                Time = percentileMetric.Time,
+                Value = percentileMetric.Value,
+                Id = percentileMetric.Id,
             });
 
             if (_logger != null)
@@ -87,21 +82,16 @@ namespace MetricsAgent.Controllers
 
             return Ok(response);
         }
-        private int PercentileCalc(int[] sequence, double PercentileValue)
+        private List<int> GetListValuesFromMetrics(IList<NetworkMetric> metricValues)
         {
-            Array.Sort(sequence);
-            int N = sequence.Length;
-            double n = (N - 1) * PercentileValue + 1;
+            HashSet<int> set = new HashSet<int>();
 
-            if (n == 1d) return sequence[0];
-            else if (n == N) return sequence[N - 1];
-            else
+            foreach (var metric in metricValues)
             {
-                int k = (int)n;
-                double d = n - k;
-
-                return Array.Find(sequence, p => p > (sequence[k - 1] + d * (sequence[k] - sequence[k - 1])));
+                set.Add(metric.Value);
             }
+
+            return new List<int>(set);
         }
     }
 }

@@ -1,10 +1,12 @@
 ﻿using MetricsLibrary;
 using MetricsManager.DAL;
+using MetricsManager.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MetricsManager.Controllers
 {
@@ -63,8 +65,8 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+            var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllHddMetricsResponse()
             {
@@ -73,10 +75,15 @@ namespace MetricsManager.Controllers
 
             response.Metrics.Add(new HddMetricManagerDto
             {
-                Time = metrics[percentileThisList].Time,
+                Time = percentileMetric.Time,
+                Value = percentileMetric.Value,
+                Id = percentileMetric.Id,
+                IdAgent = percentileMetric.IdAgent
+                /*Time = metrics[percentileThisList].Time,
                 Value = metrics[percentileThisList].Value,
                 Id = metrics[percentileThisList].Id,
                 IdAgent = metrics[percentileThisList].IdAgent
+                */
             });
 
             if (_logger != null)
@@ -126,8 +133,8 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+            var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllHddMetricsResponse()
             {
@@ -136,10 +143,15 @@ namespace MetricsManager.Controllers
 
             response.Metrics.Add(new HddMetricManagerDto
             {
-                Time = metrics[percentileThisList].Time,
+                Time = percentileMetric.Time,
+                Value = percentileMetric.Value,
+                Id = percentileMetric.Id,
+                IdAgent = percentileMetric.IdAgent
+                /*Time = metrics[percentileThisList].Time,
                 Value = metrics[percentileThisList].Value,
                 Id = metrics[percentileThisList].Id,
                 IdAgent = metrics[percentileThisList].IdAgent
+                */
             });
 
             if (_logger != null)
@@ -148,6 +160,17 @@ namespace MetricsManager.Controllers
             }
 
             return Ok(response);
+        }
+        private List<double> GetListValuesFromMetrics(IList<HddMetricModel> metricValues)
+        {
+            HashSet<double> set = new HashSet<double>();
+
+            foreach (var metric in metricValues)
+            {
+                set.Add(metric.Value);
+            }
+
+            return new List<double>(set);
         }
     }
 }

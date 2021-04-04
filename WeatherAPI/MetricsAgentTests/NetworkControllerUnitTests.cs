@@ -12,14 +12,15 @@ namespace MetricsAgentTests
 {
     public class NetworkControllerUnitTests
     {
-        private ILogger<NetworkMetricsController> _logger;
-        private NetworkMetricsController _controller;
-        private Mock<INetworkMetricsRepository> _mock;
+        private readonly NetworkMetricsController _controller;
+        private readonly Mock<INetworkMetricsRepository> _mock;
+        private readonly Mock<ILogger<NetworkMetricsController>> _logger;
 
         public NetworkControllerUnitTests()
         {
             _mock = new Mock<INetworkMetricsRepository>();
-            _controller = new NetworkMetricsController(_mock.Object, _logger);
+            _logger = new Mock<ILogger<NetworkMetricsController>>();
+            _controller = new NetworkMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -48,6 +49,15 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsByPercentileFromAgent(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+        }
+
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<NetworkMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<NetworkMetric>()), Times.AtMostOnce());
         }
     }
 }

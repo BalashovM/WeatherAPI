@@ -10,14 +10,15 @@ namespace MetricsAgentTests
 {
     public class HddControllerUnitTests
     {
-        private ILogger<HddMetricsController> _logger;
-        private HddMetricsController _controller;
-        private Mock<IHddMetricsRepository> _mock;
+        private readonly HddMetricsController _controller;
+        private readonly Mock<IHddMetricsRepository> _mock;
+        private readonly Mock<ILogger<HddMetricsController>> _logger;
 
         public HddControllerUnitTests()
         {
             _mock = new Mock<IHddMetricsRepository>();
-            _controller = new HddMetricsController(_mock.Object, _logger);
+            _logger = new Mock<ILogger<HddMetricsController>>();
+            _controller = new HddMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -29,6 +30,14 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsFromAgent();
             // Assert
             _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+        }
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<HddMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<HddMetric>()), Times.AtMostOnce());
         }
     }
 }

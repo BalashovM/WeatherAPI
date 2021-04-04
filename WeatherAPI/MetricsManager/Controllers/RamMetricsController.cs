@@ -1,10 +1,12 @@
 ﻿using MetricsLibrary;
 using MetricsManager.DAL;
+using MetricsManager.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MetricsManager.Controllers
 {
@@ -62,8 +64,7 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", idAgent);
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            var percentileMetric = metrics.Cast<RamMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllRamMetricsResponse()
             {
@@ -72,10 +73,10 @@ namespace MetricsManager.Controllers
 
             response.Metrics.Add(new RamMetricManagerDto
             {
-                Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
+                Time = percentileMetric.Time,
+                Value = percentileMetric.Value,
+                Id = percentileMetric.Id,
+                IdAgent = percentileMetric.IdAgent
             });
 
             if (_logger != null)
@@ -125,8 +126,7 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
-            int percentileThisList = (int)percentile;
-            percentileThisList = percentileThisList * metrics.Count / 100;
+            var percentileMetric = metrics.Cast<RamMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllRamMetricsResponse()
             {
@@ -135,10 +135,10 @@ namespace MetricsManager.Controllers
 
             response.Metrics.Add(new RamMetricManagerDto
             {
-                Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
+                Time = percentileMetric.Time,
+                Value = percentileMetric.Value,
+                Id = percentileMetric.Id,
+                IdAgent = percentileMetric.IdAgent
             });
 
             if (_logger != null)
@@ -147,6 +147,17 @@ namespace MetricsManager.Controllers
             }
 
             return Ok(response);
+        }
+        private List<double> GetListValuesFromMetrics(IList<RamMetricModel> metricValues)
+        {
+            HashSet<double> set = new HashSet<double>();
+
+            foreach (var metric in metricValues)
+            {
+                set.Add(metric.Value);
+            }
+
+            return new List<double>(set);
         }
     }
 }

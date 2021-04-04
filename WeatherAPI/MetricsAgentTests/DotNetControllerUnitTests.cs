@@ -12,14 +12,15 @@ namespace MetricsAgentTests
 {
     public class DotNetControllerUnitTests
     {
-        private ILogger<DotNetMetricsController> _logger;
-        private DotNetMetricsController _controller;
-        private Mock<IDotNetMetricsRepository> _mock;
+        private readonly DotNetMetricsController _controller;
+        private readonly Mock<IDotNetMetricsRepository> _mock;
+        private readonly Mock<ILogger<DotNetMetricsController>> _logger;
 
         public DotNetControllerUnitTests()
         {
             _mock = new Mock<IDotNetMetricsRepository>();
-            _controller = new DotNetMetricsController(_mock.Object, _logger);
+            _logger = new Mock<ILogger<DotNetMetricsController>>();
+            _controller = new DotNetMetricsController(_mock.Object, _logger.Object);
         }
 
         [Fact]
@@ -48,6 +49,15 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsByPercentileFromAgent(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+        }
+        
+        [Fact]
+        public void CreateShouldCallCreateFromRepository()
+        {
+            //Arrange
+            _mock.Setup(repository => repository.Create(It.IsAny<DotNetMetric>())).Verifiable();
+            //Assert
+            _mock.Verify(repository => repository.Create(It.IsAny<DotNetMetric>()), Times.AtMostOnce());
         }
     }
 }
