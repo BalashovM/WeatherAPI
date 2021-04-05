@@ -1,5 +1,6 @@
-﻿using MetricsAgent.DAL;
-using MetricsAgent.Models;
+﻿using AutoMapper;
+using MetricsAgent.DAL.Interfaces;
+using MetricsAgent.DAL.Models;
 using MetricsAgent.Responses;
 using MetricsLibrary;
 using Microsoft.AspNetCore.Mvc;
@@ -14,34 +15,28 @@ namespace MetricsAgent.Controllers
     [ApiController]
     public class NetworkMetricsController : ControllerBase
     {
-        private INetworkMetricsRepository _repository;
         private readonly ILogger<NetworkMetricsController> _logger;
+        private INetworkMetricsRepository _repository;
+        private readonly IMapper _mapper;
 
-        public NetworkMetricsController(INetworkMetricsRepository repository, ILogger<NetworkMetricsController> logger)
+        public NetworkMetricsController(IMapper mapper, INetworkMetricsRepository repository, ILogger<NetworkMetricsController> logger)
         {
             _repository = repository;
             _logger = logger;
+            _mapper = mapper;
         }
 
         [HttpGet("from/{fromTime}/to/{toTime}")]
         public IActionResult GetMetricsFromAgent(
-            [FromRoute] TimeSpan fromTime,
-            [FromRoute] TimeSpan toTime)
+            [FromRoute] DateTimeOffset fromTime,
+            [FromRoute] DateTimeOffset toTime)
         {
             var metrics = _repository.GetByPeriod(fromTime, toTime);
-            var response = new AllNetworkMetricsResponse()
-            {
-                Metrics = new List<NetworkMetricDto>()
-            };
+            var response = new AllNetworkMetricsResponse() { Metrics = new List<NetworkMetricDto>() };
 
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new NetworkMetricDto
-                {
-                    Time = metric.Time,
-                    Value = metric.Value,
-                    Id = metric.Id
-                });
+                response.Metrics.Add(_mapper.Map<NetworkMetricDto>(metric));
             }
 
             _logger.LogInformation($"Запрос метрик Network за период с {fromTime} по {toTime}");
@@ -51,26 +46,15 @@ namespace MetricsAgent.Controllers
 
         [HttpGet("from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromAgent(
-            [FromRoute] TimeSpan fromTime,
-            [FromRoute] TimeSpan toTime,
+            [FromRoute] DateTimeOffset fromTime,
+            [FromRoute] DateTimeOffset toTime,
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
-            if (metrics.Count == 0) return NoContent();
-
+            var metrics = _repository.GetByPeriodWithSorting(fromTime, toTime, "value");
             var percentileMetric = metrics.Cast<NetworkMetric>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
-
-            var response = new AllNetworkMetricsResponse()
-            {
-                Metrics = new List<NetworkMetricDto>()
-            };
-
-            response.Metrics.Add(new NetworkMetricDto
-            {
-                Time = percentileMetric.Time,
-                Value = percentileMetric.Value,
-                Id = percentileMetric.Id,
-            });
+            var response = new AllNetworkMetricsResponse() { Metrics = new List<NetworkMetricDto>() };
+            
+            response.Metrics.Add(_mapper.Map<NetworkMetricDto>(percentileMetric));
 
             _logger.LogInformation($"Запрос персентиля метрик Network за период с {fromTime} по {toTime}");
 

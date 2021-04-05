@@ -1,7 +1,9 @@
+using AutoMapper;
 using MetricsLibrary;
 using MetricsManager.Controllers;
-using MetricsManager.DAL;
-using MetricsManager.Models;
+using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
+using MetricsManager.Responses;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
@@ -20,15 +22,20 @@ namespace MetricsManagerTests
         {
             _logger = new Mock<ILogger<CpuMetricsController>>();
             _mock = new Mock<ICpuMetricsRepository>();
-            _controller = new CpuMetricsController(_mock.Object, _logger.Object);
+
+            var config = new MapperConfiguration(cfg => cfg.CreateMap<CpuMetricModel, CpuMetricManagerDto>());
+            IMapper mapper = config.CreateMapper();
+
+            _controller = new CpuMetricsController(mapper, _mock.Object, _logger.Object);
         }
 
         [Fact]
         public void GetMetricsFromAgentCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15); 
+
             int agentId = 1;
             _mock.Setup(a => a.GetByPeriodFromAgent(fromTime, toTime, agentId)).Returns(new List<CpuMetricModel>()).Verifiable();
             //Act
@@ -42,16 +49,17 @@ namespace MetricsManagerTests
         public void GetMetricsByPercentileFromAgentCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
             int agentId = 1;
             Percentile percentile = Percentile.P99;
             string sort = "value";
-            _mock.Setup(a => a.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId)).Returns(new List<CpuMetricModel>()).Verifiable();
+
+            _mock.Setup(a => a.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId)).Returns(new List<CpuMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _mock.Verify(repository => repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
             _logger.Verify();
         }
 
@@ -59,8 +67,9 @@ namespace MetricsManagerTests
         public void GetCpuMetricsFromClusterCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
+
             _mock.Setup(a => a.GetByPeriod(fromTime, toTime)).Returns(new List<CpuMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
@@ -73,16 +82,17 @@ namespace MetricsManagerTests
         public void GetMetricsByPercentileFromClusterCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
             Percentile percentile = Percentile.P90;
             string sort = "value";
-            _mock.Setup(a => a.GetByPeriodWithSort(fromTime, toTime, sort)).Returns(new List<CpuMetricModel>()).Verifiable();
+
+            _mock.Setup(a => a.GetByPeriodWithSorting(fromTime, toTime, sort)).Returns(new List<CpuMetricModel>()).Verifiable();
 
             //Act
             var result = _controller.GetMetricsByPercentileFromAllCluster(fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _mock.Verify(repository => repository.GetByPeriodWithSorting(fromTime, toTime, sort), Times.AtMostOnce());
             _logger.Verify();
         }
     }

@@ -1,10 +1,12 @@
-﻿using MetricsAgent.Controllers;
-using System.Collections.Generic;
-using MetricsAgent.Models;
-using Xunit;
-using Moq;
-using MetricsAgent.DAL;
+﻿using AutoMapper;
+using MetricsAgent.Controllers;
+using MetricsAgent.DAL.Interfaces;
+using MetricsAgent.DAL.Models;
+using MetricsAgent.Responses;
 using Microsoft.Extensions.Logging;
+using Moq;
+using System.Collections.Generic;
+using Xunit;
 
 namespace MetricsAgentTests
 {
@@ -18,7 +20,11 @@ namespace MetricsAgentTests
         {
             _mock = new Mock<IRamMetricsRepository>();
             _logger = new Mock<ILogger<RamMetricsController>>();
-            _controller = new RamMetricsController(_mock.Object, _logger.Object);
+
+            var config = new MapperConfiguration(cfg => cfg.CreateMap<RamMetric, RamMetricDto>());
+            IMapper mapper = config.CreateMapper();
+
+            _controller = new RamMetricsController(mapper, _mock.Object, _logger.Object);
         }
 
         [Fact]

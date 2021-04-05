@@ -1,7 +1,9 @@
-﻿using MetricsLibrary;
+﻿using AutoMapper;
+using MetricsLibrary;
 using MetricsManager.Controllers;
-using MetricsManager.DAL;
-using MetricsManager.Models;
+using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
+using MetricsManager.Responses;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
@@ -20,16 +22,21 @@ namespace MetricsManagerTests
         {
             _logger = new Mock<ILogger<DotNetMetricsController>>();
             _mock = new Mock<IDotNetMetricsRepository>();
-            _controller = new DotNetMetricsController(_mock.Object, _logger.Object);
+
+            var config = new MapperConfiguration(cfg => cfg.CreateMap<DotNetMetricModel, DotNetMetricManagerDto>());
+            IMapper mapper = config.CreateMapper();
+
+            _controller = new DotNetMetricsController(mapper, _mock.Object, _logger.Object);
         }
 
         [Fact]
         public void GetMetricsFromAgentCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
             int agentId = 1;
+
             _mock.Setup(a => a.GetByPeriodFromAgent(fromTime, toTime, agentId)).Returns(new List<DotNetMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
@@ -42,17 +49,18 @@ namespace MetricsManagerTests
         public void GetMetricsByPercentileFromAgentCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
             int agentId = 1;
             Percentile percentile = Percentile.P99;
             string sort = "value";
-            _mock.Setup(a => a.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId))
+
+            _mock.Setup(a => a.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId))
                 .Returns(new List<DotNetMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSortFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _mock.Verify(repository => repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
             _logger.Verify();
         }
 
@@ -60,8 +68,9 @@ namespace MetricsManagerTests
         public void GetDotNetMetricsFromClusterCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
+
             _mock.Setup(a => a.GetByPeriod(fromTime, toTime)).Returns(new List<DotNetMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
@@ -74,15 +83,16 @@ namespace MetricsManagerTests
         public void GetMetricsByPercentileFromClusterCheckRequestSelect()
         {
             //Arrange
-            TimeSpan fromTime = TimeSpan.FromSeconds(5);
-            TimeSpan toTime = TimeSpan.FromSeconds(10);
+            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
+            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
             Percentile percentile = Percentile.P99;
             string sort = "value";
-            _mock.Setup(a => a.GetByPeriodWithSort(fromTime, toTime, sort)).Returns(new List<DotNetMetricModel>()).Verifiable();
+
+            _mock.Setup(a => a.GetByPeriodWithSorting(fromTime, toTime, sort)).Returns(new List<DotNetMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsByPercentileFromAllCluster(fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _mock.Verify(repository => repository.GetByPeriodWithSorting(fromTime, toTime, sort), Times.AtMostOnce());
             _logger.Verify();
         }
     }

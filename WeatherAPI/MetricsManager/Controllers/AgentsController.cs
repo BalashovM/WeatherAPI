@@ -1,5 +1,5 @@
-﻿using MetricsManager.DAL;
-using MetricsManager.Models;
+﻿using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,14 +26,12 @@ namespace MetricsManager.Controllers
         {
             _repository.Create(agentInfo);
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Добавление в базу агента: " +
+            _logger.LogInformation("Добавление в базу агента: " +
                                    $"Id = {agentInfo.Id}" +
                                    $" IpAddress = {agentInfo.IpAddress}" +
                                    $" Name = {agentInfo.Name}" +
                                    $" Status = {agentInfo.Status}");
-            }
+            
             return Ok();
         }
 
