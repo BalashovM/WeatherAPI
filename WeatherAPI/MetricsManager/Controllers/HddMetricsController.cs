@@ -21,7 +21,6 @@ namespace MetricsManager.Controllers
         {
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug(1, "NLog встроен в HddMetricsController");
         }
 
         [HttpGet("agent/{idAgent}/from/{fromTime}/to/{toTime}")]
@@ -47,10 +46,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Hdd FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос метрик Hdd за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -65,7 +61,6 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
             if (metrics.Count == 0) return NoContent();
 
-            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
             var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllHddMetricsResponse()
@@ -79,17 +74,9 @@ namespace MetricsManager.Controllers
                 Value = percentileMetric.Value,
                 Id = percentileMetric.Id,
                 IdAgent = percentileMetric.IdAgent
-                /*Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
-                */
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Hdd FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Hdd за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -116,10 +103,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Hdd FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос метрик Hdd за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
@@ -133,7 +117,6 @@ namespace MetricsManager.Controllers
             var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
             if (metrics.Count == 0) return NoContent();
 
-            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
             var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
             var response = new AllHddMetricsResponse()
@@ -147,17 +130,9 @@ namespace MetricsManager.Controllers
                 Value = percentileMetric.Value,
                 Id = percentileMetric.Id,
                 IdAgent = percentileMetric.IdAgent
-                /*Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
-                */
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Hdd FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Hdd за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }

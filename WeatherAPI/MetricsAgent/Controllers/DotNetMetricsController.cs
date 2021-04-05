@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace MetricsAgent.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/metrics/DotNet/errors-count")]
     [ApiController]
     public class DotNetMetricsController : ControllerBase
     {
@@ -43,11 +43,8 @@ namespace MetricsAgent.Controllers
                     Id = metric.Id
                 });
             }
-
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик DotNet за период");
-            }
+            
+            _logger.LogInformation($"Запрос метрик DotNet за период с {fromTime } по {toTime}");
 
             return Ok(response);
         }
@@ -75,10 +72,7 @@ namespace MetricsAgent.Controllers
                 Id = percentileMetric.Id,
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile DotNet за период");
-            }
+            _logger.LogInformation($"Запрос метрик DotNet персентиля за период с {fromTime} по {toTime}");
 
             return Ok(response);
         }

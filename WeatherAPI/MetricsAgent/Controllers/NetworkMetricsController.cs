@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace MetricsAgent.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/metrics/network")]
     [ApiController]
     public class NetworkMetricsController : ControllerBase
     {
@@ -44,10 +44,7 @@ namespace MetricsAgent.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Network за период");
-            }
+            _logger.LogInformation($"Запрос метрик Network за период с {fromTime} по {toTime}");
 
             return Ok(response);
         }
@@ -75,10 +72,7 @@ namespace MetricsAgent.Controllers
                 Id = percentileMetric.Id,
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Network за период");
-            }
+            _logger.LogInformation($"Запрос персентиля метрик Network за период с {fromTime} по {toTime}");
 
             return Ok(response);
         }
