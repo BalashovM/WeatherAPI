@@ -21,7 +21,6 @@ namespace MetricsManager.Controllers
         {
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug(1, "NLog встроен в CpuMetricsController");
         }
 
         [HttpGet("agent/{agentId}/from/{fromTime}/to/{toTime}")]
@@ -47,10 +46,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Cpu FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос метрик Cpu за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -79,11 +75,8 @@ namespace MetricsManager.Controllers
                 Id = percentileMetric.Id,
                 IdAgent = percentileMetric.IdAgent
             });
-
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Cpu FromPeriod для агента");
-            }
+            
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Cpu за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -110,10 +103,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Cpu FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос метрик Cpu за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
@@ -142,10 +132,7 @@ namespace MetricsManager.Controllers
                 IdAgent = percentileMetric.IdAgent
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Cpu FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Cpu за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }

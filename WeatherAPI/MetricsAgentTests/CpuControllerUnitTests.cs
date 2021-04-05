@@ -35,10 +35,11 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsFromAgent(fromTime, toTime);
             //Assert
             _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
-        public void GetByPeriodWithSortPercentileCheckRequestSelect()
+        public void GetByPeriodPercentileCheckRequestSelect()
         {
             //Arrange
             TimeSpan fromTime = TimeSpan.FromSeconds(1);
@@ -50,6 +51,7 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsByPercentileFromAgent(fromTime, toTime, percentile);
             //Assert
             _mock.Verify(repository => repository.GetByPeriodWithSort(fromTime, toTime, sort), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -59,6 +61,7 @@ namespace MetricsAgentTests
             _mock.Setup(repository => repository.Create(It.IsAny<CpuMetric>())).Verifiable();
             //Assert
             _mock.Verify(repository => repository.Create(It.IsAny<CpuMetric>()), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }

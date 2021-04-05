@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace MetricsAgent.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/metrics/ram")]
     [ApiController]
     public class RamMetricsController : ControllerBase
     {
@@ -37,10 +37,7 @@ namespace MetricsAgent.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик RAM Available");
-            }
+            _logger.LogInformation("Запрос всех метрик RAM(Available)");
 
             return Ok(response);
         }

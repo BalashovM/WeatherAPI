@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace MetricsAgent.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/metrics/Cpu")]
     [ApiController]
     public class CpuMetricsController : ControllerBase
     {
@@ -44,12 +44,9 @@ namespace MetricsAgent.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Cpu за период");
-            }
+            _logger.LogInformation($"Запрос метрик Cpu за период c {fromTime} по {toTime}");
 
-            return Ok();
+            return Ok(response);
 		}
 
 		[HttpGet("from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
@@ -75,10 +72,7 @@ namespace MetricsAgent.Controllers
                 Id = percentileMetric.Id,
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Cpu за период");
-            }
+            _logger.LogInformation($"Запрос метрик Cpu персентиля = {percentile} за период c {fromTime} по {toTime}");
 
             return Ok(response);
         }

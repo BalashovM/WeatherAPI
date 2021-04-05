@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace MetricsAgent.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/metrics/hdd")]
     [ApiController]
     public class HddMetricsController : ControllerBase
     {
@@ -37,10 +37,7 @@ namespace MetricsAgent.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Hdd FreeSize");
-            }
+            _logger.LogInformation("Запрос всех метрик Hdd(FreeSize)");
 
             return Ok(response);
         }

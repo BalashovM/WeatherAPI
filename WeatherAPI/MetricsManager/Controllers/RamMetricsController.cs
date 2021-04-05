@@ -46,22 +46,19 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Ram FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос метрик Ram за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
 
         [HttpGet("agent/{idAgent}/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromAgent(
-            [FromRoute] int idAgent,
+            [FromRoute] int agentId,
             [FromRoute] TimeSpan fromTime,
             [FromRoute] TimeSpan toTime,
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", idAgent);
+            var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
             if (metrics.Count == 0) return NoContent();
 
             var percentileMetric = metrics.Cast<RamMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
@@ -79,10 +76,7 @@ namespace MetricsManager.Controllers
                 IdAgent = percentileMetric.IdAgent
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Ram FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Ram за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -109,10 +103,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Ram FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос метрик Ram за период с {fromTime} по {toTime} для клстера");
 
             return Ok(response);
         }
@@ -141,10 +132,7 @@ namespace MetricsManager.Controllers
                 IdAgent = percentileMetric.IdAgent
             });
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Ram FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Ram за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }

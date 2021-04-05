@@ -22,7 +22,7 @@ namespace MetricsAgentTests
         }
 
         [Fact]
-        public void GetMetricsFromAgent_ReturnsOk()
+        public void GetMetricsAvailableCheckRequestSelect()
         {
             //Arrange
             _mock.Setup(a => a.GetAll()).Returns(new List<RamMetric>()).Verifiable();
@@ -30,6 +30,7 @@ namespace MetricsAgentTests
             var result = _controller.GetMetricsFromAgent();
             // Assert
             _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+            _logger.Verify();
         }
 
         [Fact]
@@ -39,6 +40,7 @@ namespace MetricsAgentTests
             _mock.Setup(repository => repository.Create(It.IsAny<RamMetric>())).Verifiable();
             //Assert
             _mock.Verify(repository => repository.Create(It.IsAny<RamMetric>()), Times.AtMostOnce());
+            _logger.Verify();
         }
     }
 }
