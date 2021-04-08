@@ -24,7 +24,7 @@ namespace MetricsAgent.DAL.Repositories
                 new
                 {
                     value = item.Value,
-                    time = item.Time
+                    time = item.Time.ToUnixTimeSeconds()
                 });
         }
 
@@ -45,7 +45,7 @@ namespace MetricsAgent.DAL.Repositories
                 new
                 {
                     value = item.Value,
-                    time = item.Time,
+                    time = item.Time.ToUnixTimeSeconds(),
                     id = item.Id
                 });
         }
