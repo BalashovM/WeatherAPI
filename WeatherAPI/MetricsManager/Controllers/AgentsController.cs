@@ -1,4 +1,5 @@
-﻿using MetricsManager.DAL.Interfaces;
+﻿using AutoMapper;
+using MetricsManager.DAL.Interfaces;
 using MetricsManager.DAL.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,14 @@ namespace MetricsManager.Controllers
     public class AgentsController : ControllerBase
     {
         private readonly ILogger<AgentsController> _logger;
-        private IAgentsRepository _repository;
+        private readonly IAgentsRepository _repository;
+        private readonly IMapper _mapper;
 
-        public AgentsController(IAgentsRepository repository, ILogger<AgentsController> logger)
+        public AgentsController(IMapper mapper, IAgentsRepository repository, ILogger<AgentsController> logger)
         {
             _repository = repository;
             _logger = logger;
+
         }
 
         [HttpPost("register")]
