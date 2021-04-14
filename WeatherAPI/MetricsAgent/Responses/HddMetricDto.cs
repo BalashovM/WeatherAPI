@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MetricsAgent.Responses
 {
@@ -9,6 +10,7 @@ namespace MetricsAgent.Responses
 
     public class HddMetricDto
     {
+        public DateTimeOffset Time { get; set; }
         public double FreeSize { get; set; }
         public int Id { get; set; }
     }

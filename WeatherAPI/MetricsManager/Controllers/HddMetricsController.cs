@@ -1,6 +1,7 @@
-﻿using MetricsLibrary;
-using MetricsManager.DAL;
-using MetricsManager.Models;
+﻿using AutoMapper;
+using MetricsLibrary;
+using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,42 +16,31 @@ namespace MetricsManager.Controllers
     public class HddMetricsController : ControllerBase
     {
         private readonly ILogger<HddMetricsController> _logger;
-        private IHddMetricsRepository _repository;
+        private readonly IHddMetricsRepository _repository;
+        private readonly IMapper _mapper;
 
-        public HddMetricsController(IHddMetricsRepository repository, ILogger<HddMetricsController> logger)
+        public HddMetricsController(IMapper mapper, IHddMetricsRepository repository, ILogger<HddMetricsController> logger)
         {
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug(1, "NLog встроен в HddMetricsController");
+            _mapper = mapper;
         }
 
         [HttpGet("agent/{idAgent}/from/{fromTime}/to/{toTime}")]
         public IActionResult GetMetricsFromAgent(
             [FromRoute] int agentId,
-            [FromRoute] TimeSpan fromTime,
-            [FromRoute] TimeSpan toTime)
+            [FromRoute] DateTimeOffset fromTime,
+            [FromRoute] DateTimeOffset toTime)
         {
             var metrics = _repository.GetByPeriodFromAgent(fromTime, toTime, agentId);
-            var response = new AllHddMetricsResponse()
-            {
-                Metrics = new List<HddMetricManagerDto>()
-            };
+            var response = new AllHddMetricsResponse() { Metrics = new List<HddMetricManagerDto>() };
 
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new HddMetricManagerDto
-                {
-                    Time = metric.Time,
-                    Value = metric.Value,
-                    Id = metric.Id,
-                    IdAgent = metric.IdAgent
-                });
+                response.Metrics.Add(_mapper.Map<HddMetricManagerDto>(metric));
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Hdd FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос метрик Hdd за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
@@ -58,109 +48,60 @@ namespace MetricsManager.Controllers
         [HttpGet("agent/{idAgent}/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromAgent(
         [FromRoute] int agentId,
-        [FromRoute] TimeSpan fromTime,
-        [FromRoute] TimeSpan toTime,
+        [FromRoute] DateTimeOffset fromTime,
+        [FromRoute] DateTimeOffset toTime,
         [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSortFromAgent(fromTime, toTime, "value", agentId);
-            if (metrics.Count == 0) return NoContent();
+            var metrics = _repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, "value", agentId);
 
-            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
             var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
-            var response = new AllHddMetricsResponse()
-            {
-                Metrics = new List<HddMetricManagerDto>()
-            };
+            var response = new AllHddMetricsResponse() { Metrics = new List<HddMetricManagerDto>() };
 
-            response.Metrics.Add(new HddMetricManagerDto
-            {
-                Time = percentileMetric.Time,
-                Value = percentileMetric.Value,
-                Id = percentileMetric.Id,
-                IdAgent = percentileMetric.IdAgent
-                /*Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
-                */
-            });
+            response.Metrics.Add(_mapper.Map<HddMetricManagerDto>(percentileMetric));
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Hdd FromPeriod для агента");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Hdd за период с {fromTime} по {toTime} для агента {agentId}");
 
             return Ok(response);
         }
 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}")]
         public IActionResult GetMetricsFromAllCluster(
-                    [FromRoute] TimeSpan fromTime,
-                    [FromRoute] TimeSpan toTime)
+                    [FromRoute] DateTimeOffset fromTime,
+                    [FromRoute] DateTimeOffset toTime)
         {
             var metrics = _repository.GetByPeriod(fromTime, toTime);
-            var response = new AllHddMetricsResponse()
-            {
-                Metrics = new List<HddMetricManagerDto>()
-            };
+            var response = new AllHddMetricsResponse() { Metrics = new List<HddMetricManagerDto>() };
 
             foreach (var metric in metrics)
             {
-                response.Metrics.Add(new HddMetricManagerDto
-                {
-                    Time = metric.Time,
-                    Value = metric.Value,
-                    Id = metric.Id,
-                    IdAgent = metric.IdAgent
-                });
+                response.Metrics.Add(_mapper.Map<HddMetricManagerDto>(metric));
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос метрик Hdd FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос метрик Hdd за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromCluster(
-            [FromRoute] TimeSpan fromTime,
-            [FromRoute] TimeSpan toTime,
+            [FromRoute] DateTimeOffset fromTime,
+            [FromRoute] DateTimeOffset toTime,
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSort(fromTime, toTime, "value");
-            if (metrics.Count == 0) return NoContent();
+            var metrics = _repository.GetByPeriodWithSorting(fromTime, toTime, "value");
 
-            //int percentileThisList = metrics.IndexOf(x => x.value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
             var percentileMetric = metrics.Cast<HddMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
 
-            var response = new AllHddMetricsResponse()
-            {
-                Metrics = new List<HddMetricManagerDto>()
-            };
+            var response = new AllHddMetricsResponse() { Metrics = new List<HddMetricManagerDto>() };
 
-            response.Metrics.Add(new HddMetricManagerDto
-            {
-                Time = percentileMetric.Time,
-                Value = percentileMetric.Value,
-                Id = percentileMetric.Id,
-                IdAgent = percentileMetric.IdAgent
-                /*Time = metrics[percentileThisList].Time,
-                Value = metrics[percentileThisList].Value,
-                Id = metrics[percentileThisList].Id,
-                IdAgent = metrics[percentileThisList].IdAgent
-                */
-            });
+            response.Metrics.Add(_mapper.Map<HddMetricManagerDto>(percentileMetric));
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос percentile Hdd FromPeriod для кластера");
-            }
+            _logger.LogInformation($"Запрос персентиля = {percentile} метрик Hdd за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
+
         private List<double> GetListValuesFromMetrics(IList<HddMetricModel> metricValues)
         {
             HashSet<double> set = new HashSet<double>();

@@ -1,5 +1,5 @@
-﻿using MetricsManager.DAL;
-using MetricsManager.Models;
+﻿using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,6 @@ namespace MetricsManager.Controllers
         {
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug(1, "NLog встроен в AgentController");
         }
 
         [HttpPost("register")]
@@ -27,14 +26,12 @@ namespace MetricsManager.Controllers
         {
             _repository.Create(agentInfo);
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Добавление в базу агента: " +
+            _logger.LogInformation("Добавление в базу агента: " +
                                    $"Id = {agentInfo.Id}" +
                                    $" IpAddress = {agentInfo.IpAddress}" +
                                    $" Name = {agentInfo.Name}" +
                                    $" Status = {agentInfo.Status}");
-            }
+            
             return Ok();
         }
 
@@ -45,10 +42,8 @@ namespace MetricsManager.Controllers
             agent.Status = true;
             _repository.Update(agent);
 
-            if (_logger != null)
-            {
-                _logger.LogInformation($"Подключение агента {agentId}");
-            }
+            _logger.LogInformation($"Подключение агента {agentId}");
+
             return Ok();
         }
 
@@ -59,10 +54,8 @@ namespace MetricsManager.Controllers
             agent.Status = false;
             _repository.Update(agent);
 
-            if (_logger != null)
-            {
-                _logger.LogInformation($"Отключение агента {agentId}");
-            }
+            _logger.LogInformation($"Отключение агента {agentId}");
+
             return Ok();
         }
 
@@ -86,10 +79,7 @@ namespace MetricsManager.Controllers
                 });
             }
 
-            if (_logger != null)
-            {
-                _logger.LogInformation("Запрос всех агентов");
-            }
+            _logger.LogInformation("Запрос всех агентов");
 
             return Ok(response);
         }

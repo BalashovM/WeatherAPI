@@ -1,6 +1,6 @@
 ﻿using MetricsManager.Controllers;
-using MetricsManager.DAL;
-using MetricsManager.Models;
+using MetricsManager.DAL.Interfaces;
+using MetricsManager.DAL.Models;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Collections.Generic;
