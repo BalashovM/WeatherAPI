@@ -2,7 +2,9 @@ using AutoMapper;
 using FluentMigrator.Runner;
 using MetricsAgent.DAL.Interfaces;
 using MetricsAgent.DAL.Repositories;
-using MetricsAgent.Jobs;
+using MetricsAgent.DBSettings;
+using MetricsAgent.Scheduler;
+using MetricsAgent.Scheduler.Jobs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -11,12 +13,16 @@ using Microsoft.Extensions.Hosting;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
-using System.Data.SQLite;
 
 namespace MetricsAgent
 {
     public class Startup
     {
+        /// <summary>
+		/// »нтервал запуска заданий
+		/// </summary>
+		private const string CronExpression = "0/5 * * * * ?";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,12 +30,9 @@ namespace MetricsAgent
 
         public IConfiguration Configuration { get; }
         
-        private const string ConnectionString = @"Data Source=metrics.db; Version=3;";
-
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            ConfigureSqlLiteConnection(services);
 
             services.AddSingleton<ICpuMetricsRepository, CpuMetricsRepository>();
             services.AddSingleton<IDotNetMetricsRepository, DotNetMetricsRepository>();
@@ -41,17 +44,28 @@ namespace MetricsAgent
             var mapper = mapperConfiguration.CreateMapper();
             services.AddSingleton(mapper);
 
+            services.AddSingleton<IDBSettings, SQLiteSettings>();
+
             services.AddFluentMigratorCore()
                 .ConfigureRunner(rb => rb
                     // добавл€ем поддержку SQLite 
                     .AddSQLite()
                     // устанавливаем строку подключени€
-                    .WithGlobalConnectionString(ConnectionString)
+                    .WithGlobalConnectionString(new SQLiteSettings().ConnectionString)
                     // подсказываем где искать классы с миграци€ми
                     .ScanIn(typeof(Startup).Assembly).For.Migrations()
                 ).AddLogging(lb => lb
                     .AddFluentMigratorConsole());
-            
+
+            JobsSheduleSettings(services);
+        }
+
+        /// <summary>
+		/// Ќастройка сбора метрик по расписанию
+		/// </summary>
+		/// <param name="services"></param>
+        private void JobsSheduleSettings(IServiceCollection services)
+        {
             //ƒобавл€ем сервисы
             services.AddSingleton<IJobFactory, SingletonJobFactory>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
@@ -64,33 +78,26 @@ namespace MetricsAgent
 
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(CpuMetricJob),
-                cronExpression: "0/5 * * * * ?")); // запускать каждые 5 секунд
+                cronExpression: CronExpression)); 
 
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(HddMetricJob),
-                cronExpression: "0/5 * * * * ?")); // запускать каждые 5 секунд
+                cronExpression: CronExpression));
 
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(RamMetricJob),
-                cronExpression: "0/5 * * * * ?")); // запускать каждые 5 секунд
+                cronExpression: CronExpression));
 
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(NetworkMetricJob),
-                cronExpression: "0/5 * * * * ?")); // запускать каждые 5 секунд
+                cronExpression: CronExpression));
 
             services.AddSingleton(new JobSchedule(
                 jobType: typeof(DotNetMetricJob),
-                cronExpression: "0/5 * * * * ?")); // запускать каждые 5 секунд
+                cronExpression: CronExpression));
 
             services.AddHostedService<QuartzHostedService>();
-        }
 
-        private void ConfigureSqlLiteConnection(IServiceCollection services)
-        {
-            string connectionString = "Data Source=:memory:";
-            var connection = new SQLiteConnection(connectionString);
-            connection.Open();
-            services.AddSingleton(connection);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

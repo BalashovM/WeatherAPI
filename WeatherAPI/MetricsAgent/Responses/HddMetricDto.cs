@@ -12,6 +12,5 @@ namespace MetricsAgent.Responses
     {
         public DateTimeOffset Time { get; set; }
         public double FreeSize { get; set; }
-        public int Id { get; set; }
     }
 }

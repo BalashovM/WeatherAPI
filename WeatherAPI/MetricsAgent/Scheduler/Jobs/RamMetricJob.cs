@@ -6,31 +6,38 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace MetricsAgent.Jobs
+namespace MetricsAgent.Scheduler.Jobs
 {
+    /// <summary>
+	/// Задача сбора Ram метрик
+	/// </summary>
+    [DisallowConcurrentExecution]
     public class RamMetricJob : IJob
     {
         private readonly IServiceProvider _provider;
         private readonly IRamMetricsRepository _repository;
-        private PerformanceCounter _ramCounter;
+        /// <summary>Имя категории счетчика</summary>
+		private readonly string categoryName = "Memory";
+        /// <summary>Имя счетчика</summary>
+        private readonly string counterName = "Available MBytes";
+        /// <summary>Счетчик</summary>
+        private readonly PerformanceCounter _counter;
 
         public RamMetricJob(IServiceProvider provider)
         {
             _provider = provider;
             _repository = _provider.GetService<IRamMetricsRepository>();
-            _ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+            _counter = new PerformanceCounter(categoryName, counterName);
         }
 
         public Task Execute(IJobExecutionContext context)
         {
-            var ramAvialableMBytes = Convert.ToInt32(_ramCounter.NextValue());
+            var value = Convert.ToInt32(_counter.NextValue());
             var time = DateTimeOffset.UtcNow;
 
-            _repository.Create(new RamMetric { Time = time, Available = ramAvialableMBytes });
+            _repository.Create(new RamMetric { Time = time, Value = value });
 
             return Task.CompletedTask;
-
         }
-
     }
 }

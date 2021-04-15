@@ -3,6 +3,9 @@ using MetricsAgent.DAL.Models;
 using MetricsAgent.Responses;
 namespace MetricsAgent
 {
+    /// <summary>
+	/// Профайлер для маппинга между моделями и DTO объектами метрик
+	/// </summary>
     public class MapperProfile : Profile
     {
         public MapperProfile()
