@@ -17,10 +17,16 @@ namespace MetricsManager.Controllers
     {
         private readonly ILogger<NetworkMetricsController> _logger;
         private readonly INetworkMetricsRepository _repository;
+        private readonly IAgentsRepository _agentRepository;
         private readonly IMapper _mapper;
 
-        public NetworkMetricsController(IMapper mapper, INetworkMetricsRepository repository, ILogger<NetworkMetricsController> logger)
+        public NetworkMetricsController(
+            IMapper mapper,
+            INetworkMetricsRepository repository,
+            IAgentsRepository agentRepository,
+            ILogger<NetworkMetricsController> logger)
         {
+            _agentRepository = agentRepository;
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
@@ -71,12 +77,20 @@ namespace MetricsManager.Controllers
             [FromRoute] DateTimeOffset fromTime, 
             [FromRoute] DateTimeOffset toTime)
         {
+            var agents = _agentRepository.GetAll();
+
             var metrics = _repository.GetByPeriod(fromTime, toTime);
+
             var response = new AllNetworkMetricsResponse() { Metrics = new List<NetworkMetricManagerDto>() };
 
-            foreach (var metric in metrics)
+            foreach (var agent in agents)
             {
-                response.Metrics.Add(_mapper.Map<NetworkMetricManagerDto>(metric));
+                var currentAgentMetrics = _repository.GetByPeriodFromAgent(fromTime, toTime, agent.Id);
+
+                foreach (var metric in metrics)
+                {
+                    response.Metrics.Add(_mapper.Map<NetworkMetricManagerDto>(metric));
+                }
             }
 
             _logger.LogInformation($"Запрос метрик Network за период с {fromTime} по {toTime} для кластера");
@@ -90,13 +104,17 @@ namespace MetricsManager.Controllers
             [FromRoute] DateTimeOffset toTime, 
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSorting(fromTime, toTime, "value");
-
-            var percentileMetric = metrics.Cast<NetworkMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+            var agents = _agentRepository.GetAll();
 
             var response = new AllNetworkMetricsResponse() { Metrics = new List<NetworkMetricManagerDto>() };
+            foreach (var agent in agents)
+            {
+                var metrics = _repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, "value", agent.Id);
 
-            response.Metrics.Add(_mapper.Map<NetworkMetricManagerDto>(percentileMetric));
+                var percentileMetric = metrics.Cast<NetworkMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+
+                response.Metrics.Add(_mapper.Map<NetworkMetricManagerDto>(percentileMetric));
+            }
 
             _logger.LogInformation($"Запрос персентиля = {percentile} метрик Cpu за период с {fromTime} по {toTime} для кластера");
 

@@ -1,8 +1,8 @@
 using AutoMapper;
+using MetricsAgent;
 using MetricsAgent.Controllers;
 using MetricsAgent.DAL.Interfaces;
 using MetricsAgent.DAL.Models;
-using MetricsAgent.Responses;
 using MetricsLibrary;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,7 +23,7 @@ namespace MetricsAgentTests
             _mock = new Mock<ICpuMetricsRepository>();
             _logger = new Mock<ILogger<CpuMetricsController>>();
             
-            var config = new MapperConfiguration(cfg => cfg.CreateMap<CpuMetric, CpuMetricDto>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile(new MapperProfile()));
             IMapper mapper = config.CreateMapper();
 
             _controller = new CpuMetricsController(mapper, _mock.Object, _logger.Object);

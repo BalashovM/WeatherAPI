@@ -4,6 +4,9 @@ using System.Data;
 
 namespace MetricsAgent.DAL
 {
+    /// <summary>
+	/// Хэндлер для парсинга значений в DateTimeOffset в классах моделей
+	/// </summary>
     public class DateTimeOffsetHandler : SqlMapper.TypeHandler<DateTimeOffset>
     {
         public override DateTimeOffset Parse(object value)

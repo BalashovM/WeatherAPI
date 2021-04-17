@@ -10,9 +10,9 @@ namespace MetricsManager.Responses
     }
     public class RamMetricManagerDto
     {
-        public TimeSpan Time { get; set; }
+        public DateTimeOffset Time { get; set; }
         public double Value { get; set; }
         public int Id { get; set; }
-        public int IdAgent { get; set; }
+        public int AgentId { get; set; }
     }
 }

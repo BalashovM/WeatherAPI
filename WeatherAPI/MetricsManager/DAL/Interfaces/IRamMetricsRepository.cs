@@ -10,5 +10,6 @@ namespace MetricsManager.DAL.Interfaces
         IList<RamMetricModel> GetByPeriodFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, int idAgent);
         IList<RamMetricModel> GetByPeriodWithSorting(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField);
         IList<RamMetricModel> GetByPeriodWithSortingFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField, int idAgent);
+        RamMetricModel GetLast(int agentId);
     }
 }

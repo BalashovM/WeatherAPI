@@ -37,6 +37,7 @@ namespace MetricsAgent
                 })
                 .ConfigureLogging(logging =>
                 {
+                    logging.AddDebug();
                     logging.ClearProviders();
                     logging.SetMinimumLevel(LogLevel.Trace);
                 }).UseNLog();

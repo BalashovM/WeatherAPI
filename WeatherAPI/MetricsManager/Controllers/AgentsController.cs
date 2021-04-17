@@ -1,4 +1,5 @@
-﻿using MetricsManager.DAL.Interfaces;
+﻿using AutoMapper;
+using MetricsManager.DAL.Interfaces;
 using MetricsManager.DAL.Models;
 using MetricsManager.Responses;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,14 @@ namespace MetricsManager.Controllers
     public class AgentsController : ControllerBase
     {
         private readonly ILogger<AgentsController> _logger;
-        private IAgentsRepository _repository;
+        private readonly IAgentsRepository _repository;
+        private readonly IMapper _mapper;
 
-        public AgentsController(IAgentsRepository repository, ILogger<AgentsController> logger)
+        public AgentsController(IMapper mapper, IAgentsRepository repository, ILogger<AgentsController> logger)
         {
             _repository = repository;
             _logger = logger;
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -62,21 +65,15 @@ namespace MetricsManager.Controllers
         [HttpGet("registred")]
         public IActionResult GetAll()
         {
-            var metrics = _repository.GetAll();
+            var allAgentsInfo = _repository.GetAll();
             var response = new AllAgentsResponse()
             {
                 Metrics = new List<AgentManagerDto>()
             };
 
-            foreach (var metric in metrics)
+            foreach (var agentInfo in allAgentsInfo)
             {
-                response.Metrics.Add(new AgentManagerDto
-                {
-                    Id = metric.Id,
-                    Status = metric.Status,
-                    IpAddress = metric.IpAddress,
-                    Name = metric.Name
-                });
+                response.Metrics.Add(_mapper.Map<AgentManagerDto>(agentInfo));
             }
 
             _logger.LogInformation("Запрос всех агентов");

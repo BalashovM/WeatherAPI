@@ -1,105 +1,139 @@
-﻿using MetricsManager.DAL.Interfaces;
+﻿using Dapper;
+using MetricsManager.DAL.Interfaces;
 using MetricsManager.DAL.Models;
+using MetricsManager.DBSettings;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Linq;
 
 namespace MetricsManager.DAL.Repositories
 {
     public class AgentsRepository : IAgentsRepository
     {
-        private SQLiteConnection _connection;
-        public AgentsRepository(SQLiteConnection connection)
+        /// <summary>
+        /// Объект с именами и настройками базы данных
+        /// </summary>
+        private readonly IDBSettings _dbSettings;
+        private readonly ILogger _logger;
+
+        public AgentsRepository(IDBSettings dbSettings, ILogger<AgentsRepository> logger)
         {
-            _connection = connection;
+            _dbSettings = dbSettings;
+            _logger = logger;
         }
 
         public void Create(AgentModel item)
         {
-            using var cmd = new SQLiteCommand(_connection);
-
-            cmd.CommandText = "INSERT INTO agents(status, ipaddress, name) VALUES(@status, @ipaddress, @name)";
-            cmd.Parameters.AddWithValue("@status", Convert.ToInt32(item.Status));
-            cmd.Parameters.AddWithValue("@ipaddress", item.IpAddress);
-            cmd.Parameters.AddWithValue("@name", item.Name);
-
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                connection.Execute(
+                    $"INSERT INTO {_dbSettings[Tables.Agent]}" +
+                    $"({_dbSettings[Columns.Name]}, {_dbSettings[Columns.IpAddress]}, {_dbSettings[Columns.Status]}) " +
+                    $"VALUES(@name, @ipaddress, @status)",
+                new
+                {
+                    name = item.Name,
+                    ipaddress = item.IpAddress,
+                    status = Convert.ToInt32(item.Status)
+                });
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public void Delete(int id)
         {
-            using var cmd = new SQLiteCommand(_connection);
 
-            cmd.CommandText = "DELETE FROM agents WHERE id = @id";
-            cmd.Parameters.AddWithValue("@id", id);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                connection.Execute(
+                            $"DELETE FROM {_dbSettings[Tables.Agent]} " +
+                            $"WHERE {_dbSettings[Columns.Id]} = @id",
+                        new
+                        {
+                            id = id
+                        });
 
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public void Update(AgentModel item)
         {
-            using var cmd = new SQLiteCommand(_connection);
-
-            cmd.CommandText = "UPDATE agents SET status = @status, ipaddress = @ipaddress, name = @name WHERE id = @id";
-            cmd.Parameters.AddWithValue("@status", Convert.ToInt32(item.Status));
-            cmd.Parameters.AddWithValue("@ipaddress", item.IpAddress);
-            cmd.Parameters.AddWithValue("@name", item.Name);
-            cmd.Parameters.AddWithValue("@id", item.Id);
-
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                connection.Execute(
+                            $"UPDATE {_dbSettings[Tables.Agent]} " +
+                            $"SET {_dbSettings[Columns.Name]} = @name, {_dbSettings[Columns.IpAddress]} = @ipaddress, {_dbSettings[Columns.Status]} = @status " +
+                            $"WHERE {_dbSettings[Columns.Id]} = @id",
+                        new
+                        {
+                            name = item.Name,
+                            ipaddress = item.IpAddress,
+                            status = Convert.ToInt32(item.Status),
+                            id = item.Id
+                        });
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public IList<AgentModel> GetAll()
         {
-            using var cmd = new SQLiteCommand(_connection);
 
-            cmd.CommandText = "SELECT * FROM agents";
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            return connection
+                .Query<AgentModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Name]}, {_dbSettings[Columns.IpAddress]}, {_dbSettings[Columns.Status]} " +
+                $"FROM {_dbSettings[Tables.Agent]}")
+                .ToList();
+        }
 
-            var returnList = new List<AgentModel>();
-
-            using (SQLiteDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    returnList.Add(new AgentModel
-                    {
-                        Id = reader.GetInt32(0),
-                        Status = Convert.ToBoolean(reader.GetInt32(1)),
-                        IpAddress = reader.GetString(2),
-                        Name = reader.GetString(3)
-                    });
-                }
-            }
-            return returnList;
+        public IList<AgentModel> GetAllActive()
+        {
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            return connection
+                .Query<AgentModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Name]}, {_dbSettings[Columns.IpAddress]}, {_dbSettings[Columns.Status]} " +
+                $"FROM {_dbSettings[Tables.Agent]} " +
+                $"WHERE {_dbSettings[Columns.Status]} = 1")
+                .ToList();
         }
 
         public AgentModel GetById(int id)
         {
-            using var cmd = new SQLiteCommand(_connection);
-
-            cmd.CommandText = $"SELECT * FROM agents WHERE id = @id";
-            cmd.Parameters.AddWithValue("@id", id);
-
-            using (SQLiteDataReader reader = cmd.ExecuteReader())
-            {
-                if (reader.Read())
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            return connection
+                .QuerySingle<AgentModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Name]}, {_dbSettings[Columns.IpAddress]}, {_dbSettings[Columns.Status]} " +
+                $"FROM {_dbSettings[Tables.Agent]} " +
+                $"WHERE {_dbSettings[Columns.Id]} = @id",
+                new
                 {
-                    return new AgentModel
-                    {
-                        Id = reader.GetInt32(0),
-                        Status = Convert.ToBoolean(reader.GetInt32(1)),
-                        IpAddress = reader.GetString(2),
-                        Name = reader.GetString(3)
-                    };
-                }
-                else
-                {
-                    return null;
-                }
-            }
+                    id = id
+                });
         }
     }
 }

@@ -8,6 +8,7 @@ namespace MetricsManager
     {
         public MapperProfile()
         {
+            CreateMap<AgentModel, AgentManagerDto>();
             CreateMap<CpuMetricModel, CpuMetricManagerDto>();
             CreateMap<DotNetMetricModel, DotNetMetricManagerDto>();
             CreateMap<NetworkMetricModel, NetworkMetricManagerDto>();

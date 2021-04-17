@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
+using MetricsAgent;
 using MetricsAgent.Controllers;
 using MetricsAgent.DAL.Interfaces;
 using MetricsAgent.DAL.Models;
-using MetricsAgent.Responses;
 using MetricsLibrary;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,7 +23,7 @@ namespace MetricsAgentTests
             _mock = new Mock<IDotNetMetricsRepository>();
             _logger = new Mock<ILogger<DotNetMetricsController>>();
 
-            var config = new MapperConfiguration(cfg => cfg.CreateMap<DotNetMetric, DotNetMetricDto>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile(new MapperProfile()));
             IMapper mapper = config.CreateMapper();
 
             _controller = new DotNetMetricsController(mapper, _mock.Object, _logger.Object);

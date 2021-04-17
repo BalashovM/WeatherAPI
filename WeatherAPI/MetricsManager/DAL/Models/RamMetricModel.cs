@@ -7,6 +7,6 @@ namespace MetricsManager.DAL.Models
         public int Id { get; set; }
         public double Value { get; set; }
         public DateTimeOffset Time { get; set; }
-        public int IdAgent { get; set; }
+        public int AgentId { get; set; }
     }
 }

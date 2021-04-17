@@ -17,10 +17,16 @@ namespace MetricsManager.Controllers
     {
         private readonly ILogger<DotNetMetricsController> _logger;
         private readonly IDotNetMetricsRepository _repository;
+        private readonly IAgentsRepository _agentRepository;
         private readonly IMapper _mapper;
 
-        public DotNetMetricsController(IMapper mapper, IDotNetMetricsRepository repository, ILogger<DotNetMetricsController> logger)
+        public DotNetMetricsController(
+            IMapper mapper,
+            IDotNetMetricsRepository repository,
+            IAgentsRepository agentRepository,
+            ILogger<DotNetMetricsController> logger)
         {
+            _agentRepository = agentRepository;
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
@@ -70,12 +76,21 @@ namespace MetricsManager.Controllers
             [FromRoute] DateTimeOffset fromTime, 
             [FromRoute] DateTimeOffset toTime)
         {
+
+            var agents = _agentRepository.GetAll();
+
             var metrics = _repository.GetByPeriod(fromTime, toTime);
+
             var response = new AllDotNetMetricsResponse() { Metrics = new List<DotNetMetricManagerDto>() };
 
-            foreach (var metric in metrics)
+            foreach (var agent in agents)
             {
-                response.Metrics.Add(_mapper.Map<DotNetMetricManagerDto>(metric));
+                var currentAgentMetrics = _repository.GetByPeriodFromAgent(fromTime, toTime, agent.Id);
+
+                foreach (var metric in metrics)
+                {
+                    response.Metrics.Add(_mapper.Map<DotNetMetricManagerDto>(metric));
+                }
             }
 
             _logger.LogInformation($"Запрос метрик DotNet за период с {fromTime} по {toTime} для кластера");
@@ -89,18 +104,23 @@ namespace MetricsManager.Controllers
             [FromRoute] DateTimeOffset toTime, 
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSorting(fromTime, toTime, "value");
-
-            var percentileMetric = metrics.Cast<DotNetMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+            var agents = _agentRepository.GetAll();
 
             var response = new AllDotNetMetricsResponse() { Metrics = new List<DotNetMetricManagerDto>() };
+            foreach (var agent in agents)
+            {
+                var metrics = _repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, "value", agent.Id);
 
-            response.Metrics.Add(_mapper.Map<DotNetMetricManagerDto>(percentileMetric));
+                var percentileMetric = metrics.Cast<DotNetMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+
+                response.Metrics.Add(_mapper.Map<DotNetMetricManagerDto>(percentileMetric));
+            }
 
             _logger.LogInformation($"Запрос персентиля = {percentile} метрик DotNet за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
+
         private List<int> GetListValuesFromMetrics(IList<DotNetMetricModel> metricValues)
         {
             HashSet<int> set = new HashSet<int>();
