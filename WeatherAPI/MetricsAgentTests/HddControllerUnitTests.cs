@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
+using MetricsAgent;
 using MetricsAgent.Controllers;
 using MetricsAgent.DAL.Interfaces;
 using MetricsAgent.DAL.Models;
-using MetricsAgent.Responses;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace MetricsAgentTests
             _mock = new Mock<IHddMetricsRepository>();
             _logger = new Mock<ILogger<HddMetricsController>>();
 
-            var config = new MapperConfiguration(cfg => cfg.CreateMap<HddMetric, HddMetricDto>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile(new MapperProfile()));
             IMapper mapper = config.CreateMapper();
 
             _controller = new HddMetricsController(mapper, _mock.Object, _logger.Object);

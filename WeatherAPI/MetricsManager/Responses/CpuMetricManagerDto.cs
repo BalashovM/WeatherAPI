@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MetricsManager.Responses
 {
-    public class AllCpuMetricsFromAgentResponse
+    public class AllCpuMetricsResponse
     {
         public List<CpuMetricManagerDto> Metrics { get; set; }
     }
@@ -13,6 +13,6 @@ namespace MetricsManager.Responses
         public DateTimeOffset Time { get; set; }
         public int Value { get; set; }
         public int Id { get; set; }
-        public int IdAgent { get; set; }
+        public int AgentId { get; set; }
     }
 }

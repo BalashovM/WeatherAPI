@@ -1,4 +1,6 @@
-﻿using MetricsManager.Controllers;
+﻿using AutoMapper;
+using MetricsManager;
+using MetricsManager.Controllers;
 using MetricsManager.DAL.Interfaces;
 using MetricsManager.DAL.Models;
 using Microsoft.Extensions.Logging;
@@ -10,26 +12,30 @@ namespace MetricsManagerTests
 {
     public class AgentsControllerUnitTests
     {
-        private AgentsController _controller;
-        private Mock<ILogger<AgentsController>> _logger;
-        private Mock<IAgentsRepository> _mock;
+        private readonly AgentsController _controller;
+        private readonly Mock<ILogger<AgentsController>> _logger;
+        private readonly Mock<IAgentsRepository> _agentsRepository;
 
         public AgentsControllerUnitTests()
         {
             _logger = new Mock<ILogger<AgentsController>>();
-            _mock = new Mock<IAgentsRepository>();
-            _controller = new AgentsController(_mock.Object, _logger.Object);
+            _agentsRepository = new Mock<IAgentsRepository>();
+
+            var configuration = new MapperConfiguration(cfg => cfg.AddProfile(new MapperProfile()));
+            var mapper = new Mapper(configuration);
+
+            _controller = new AgentsController(mapper, _agentsRepository.Object, _logger.Object);
         }
 
         [Fact]
         public void RegisterCheckRequestCreate()
         {
             //Arrange
-            _mock.Setup(a => a.Create(new AgentModel())).Verifiable();
+            _agentsRepository.Setup(a => a.Create(new AgentModel())).Verifiable();
             //Act
             var result = _controller.RegisterAgent(new AgentModel());
             //Assert
-            _mock.Verify(repository => repository.Create(new AgentModel()), Times.AtMostOnce());
+            _agentsRepository.Verify(repository => repository.Create(new AgentModel()), Times.AtMostOnce());
             _logger.Verify();
         }
 
@@ -37,11 +43,11 @@ namespace MetricsManagerTests
         public void EnableAgentByIdCheckRequestCreate()
         {
             //Arrange
-            _mock.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
+            _agentsRepository.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
             //Act
             var result = _controller.EnableAgentById(0);
             //Assert
-            _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _agentsRepository.Verify(repository => repository.GetById(0), Times.AtMostOnce());
             _logger.Verify();
         }
 
@@ -49,11 +55,11 @@ namespace MetricsManagerTests
         public void DisableAgentByIdCheckRequestCreate()
         {
             //Arrange
-            _mock.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
+            _agentsRepository.Setup(a => a.GetById(0)).Returns(new AgentModel()).Verifiable();
             //Act
             var result = _controller.DisableAgentById(0);
             //Assert
-            _mock.Verify(repository => repository.GetById(0), Times.AtMostOnce());
+            _agentsRepository.Verify(repository => repository.GetById(0), Times.AtMostOnce());
             _logger.Verify();
         }
 
@@ -61,11 +67,11 @@ namespace MetricsManagerTests
         public void GetAllAgentsCheckRequestCreate()
         {
             //Arrange
-            _mock.Setup(a => a.GetAll()).Returns(new List<AgentModel>()).Verifiable();
+            _agentsRepository.Setup(a => a.GetAll()).Returns(new List<AgentModel>()).Verifiable();
             //Act
             var result = _controller.GetAll();
             //Assert
-            _mock.Verify(repository => repository.GetAll(), Times.AtMostOnce());
+            _agentsRepository.Verify(repository => repository.GetAll(), Times.AtMostOnce());
             _logger.Verify();
         }
     }

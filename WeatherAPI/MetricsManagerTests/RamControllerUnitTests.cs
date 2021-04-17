@@ -14,34 +14,36 @@ namespace MetricsManagerTests
 {
     public class RamControllerUnitTests
     {
-        private RamMetricsController _controller;
-        private Mock<ILogger<RamMetricsController>> _logger;
-        private Mock<IRamMetricsRepository> _mock;
+        private readonly RamMetricsController _controller;
+        private readonly Mock<ILogger<RamMetricsController>> _logger;
+        private readonly Mock<IRamMetricsRepository> _repository;
+        private readonly Mock<IAgentsRepository> _agentsRepository;
 
         public RamControllerUnitTests()
         {
             _logger = new Mock<ILogger<RamMetricsController>>();
-            _mock = new Mock<IRamMetricsRepository>();
+            _repository = new Mock<IRamMetricsRepository>();
+            _agentsRepository = new Mock<IAgentsRepository>();
 
             var config = new MapperConfiguration(cfg => cfg.CreateMap<RamMetricModel, RamMetricManagerDto>());
             IMapper mapper = config.CreateMapper();
 
-            _controller = new RamMetricsController(mapper, _mock.Object, _logger.Object);
+            _controller = new RamMetricsController(mapper, _repository.Object, _agentsRepository.Object, _logger.Object);
         }
 
         [Fact]
         public void GetMetricsFromAgentCheckRequestSelect()
         {
             //Arrange
-            DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
-            DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
+            DateTimeOffset fromTime = DateTimeOffset.MinValue;
+            DateTimeOffset toTime = DateTimeOffset.Now;
             int agentId = 1;
 
-            _mock.Setup(a => a.GetByPeriodFromAgent(fromTime, toTime, agentId)).Returns(new List<RamMetricModel>()).Verifiable();
+            _repository.Setup(a => a.GetByPeriodFromAgent(fromTime, toTime, agentId)).Returns(new List<RamMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsFromAgent(agentId, fromTime, toTime);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodFromAgent(fromTime, toTime, agentId), Times.AtMostOnce());
+            _repository.Verify(repository => repository.GetByPeriodFromAgent(fromTime, toTime, agentId), Times.AtMostOnce());
         }
 
         [Fact]
@@ -54,12 +56,12 @@ namespace MetricsManagerTests
             Percentile percentile = Percentile.P99;
             string sort = "value";
 
-            _mock.Setup(a => a.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId))
+            _repository.Setup(a => a.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId))
                 .Returns(new List<RamMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsByPercentileFromAgent(agentId, fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
+            _repository.Verify(repository => repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, sort, agentId), Times.AtMostOnce());
         }
 
         [Fact]
@@ -69,11 +71,11 @@ namespace MetricsManagerTests
             DateTimeOffset fromTime = DateTimeOffset.FromUnixTimeSeconds(3);
             DateTimeOffset toTime = DateTimeOffset.FromUnixTimeSeconds(15);
 
-            _mock.Setup(a => a.GetByPeriod(fromTime, toTime)).Returns(new List<RamMetricModel>()).Verifiable();
+            _repository.Setup(a => a.GetByPeriod(fromTime, toTime)).Returns(new List<RamMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsFromAllCluster(fromTime, toTime);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
+            _repository.Verify(repository => repository.GetByPeriod(fromTime, toTime), Times.AtMostOnce());
         }
 
         [Fact]
@@ -85,12 +87,12 @@ namespace MetricsManagerTests
             Percentile percentile = Percentile.P99;
             string sort = "value";
 
-            _mock.Setup(a => a.GetByPeriodWithSorting(fromTime, toTime, sort))
+            _repository.Setup(a => a.GetByPeriodWithSorting(fromTime, toTime, sort))
                 .Returns(new List<RamMetricModel>()).Verifiable();
             //Act
             var result = _controller.GetMetricsByPercentileFromCluster(fromTime, toTime, percentile);
             //Assert
-            _mock.Verify(repository => repository.GetByPeriodWithSorting(fromTime, toTime, sort), Times.AtMostOnce());
+            _repository.Verify(repository => repository.GetByPeriodWithSorting(fromTime, toTime, sort), Times.AtMostOnce());
         }
     }
 }

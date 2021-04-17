@@ -21,7 +21,7 @@ namespace MetricsManager.Controllers
         {
             _repository = repository;
             _logger = logger;
-
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -65,21 +65,15 @@ namespace MetricsManager.Controllers
         [HttpGet("registred")]
         public IActionResult GetAll()
         {
-            var metrics = _repository.GetAll();
+            var allAgentsInfo = _repository.GetAll();
             var response = new AllAgentsResponse()
             {
                 Metrics = new List<AgentManagerDto>()
             };
 
-            foreach (var metric in metrics)
+            foreach (var agentInfo in allAgentsInfo)
             {
-                response.Metrics.Add(new AgentManagerDto
-                {
-                    Id = metric.Id,
-                    Status = metric.Status,
-                    IpAddress = metric.IpAddress,
-                    Name = metric.Name
-                });
+                response.Metrics.Add(_mapper.Map<AgentManagerDto>(agentInfo));
             }
 
             _logger.LogInformation("Запрос всех агентов");

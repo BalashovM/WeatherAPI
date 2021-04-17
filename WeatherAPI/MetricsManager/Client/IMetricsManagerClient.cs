@@ -1,11 +1,15 @@
-﻿using MetricsManager.Requests;
-using MetricsManager.Responses;
+﻿using MetricsManager.Client.ApiRequests;
+using MetricsManager.Client.ApiResponses;
 
 namespace MetricsManager.Client
 {
-	public interface IMetricsManagerClient
+    public interface IMetricsManagerClient
 	{
-		AllAgentCpuMetricsResponse GetCpuMetrics(CpuMetricGetByIntervalRequestByClient request);
+        AllCpuMetricsApiResponse GetAllCpuMetrics(GetAllCpuMetricsApiRequest request);
+        AllHddMetricsApiResponse GetAllHddMetrics(GetAllHddMetricsApiRequest request);
+        AllDotNetMetricsApiResponse GetAllDotNetMetrics(GetAllDotNetMetricsApiRequest request);
+        AllNetworkMetricsApiResponse GetAllNetworkMetrics(GetAllNetworkMetricsApiRequest request);
+        AllRamMetricsApiResponse GetAllRamMetrics(GetAllRamMetricsApiRequest request);
 
-	}
+    }
 }

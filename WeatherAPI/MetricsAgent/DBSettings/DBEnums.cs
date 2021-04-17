@@ -10,7 +10,7 @@
 		RamMetric,
 	}
 
-	/// <summary> Ключи имен рядов </summary>
+	/// <summary> Ключи имен столбцов </summary>
 	public enum Columns
 	{
 		Id,

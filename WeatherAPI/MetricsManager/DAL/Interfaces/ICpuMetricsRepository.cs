@@ -10,5 +10,6 @@ namespace MetricsManager.DAL.Interfaces
         IList<CpuMetricModel> GetByPeriodFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, int idAgent);
         IList<CpuMetricModel> GetByPeriodWithSorting(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField);
         IList<CpuMetricModel> GetByPeriodWithSortingFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField, int idAgent);
+        CpuMetricModel GetLast(int agentId);
     }
 }

@@ -17,10 +17,16 @@ namespace MetricsManager.Controllers
     {
         private readonly ILogger<RamMetricsController> _logger;
         private readonly IRamMetricsRepository _repository;
+        private readonly IAgentsRepository _agentRepository;
         private readonly IMapper _mapper;
 
-        public RamMetricsController(IMapper mapper, IRamMetricsRepository repository, ILogger<RamMetricsController> logger)
+        public RamMetricsController(
+            IMapper mapper,
+            IRamMetricsRepository repository,
+            IAgentsRepository agentRepository,
+            ILogger<RamMetricsController> logger)
         {
+            _agentRepository = agentRepository;
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
@@ -71,12 +77,20 @@ namespace MetricsManager.Controllers
                     [FromRoute] DateTimeOffset fromTime,
                     [FromRoute] DateTimeOffset toTime)
         {
+            var agents = _agentRepository.GetAll();
+
             var metrics = _repository.GetByPeriod(fromTime, toTime);
+
             var response = new AllRamMetricsResponse() { Metrics = new List<RamMetricManagerDto>() };
 
-            foreach (var metric in metrics)
+            foreach (var agent in agents)
             {
-                response.Metrics.Add(_mapper.Map<RamMetricManagerDto>(metric));
+                var currentAgentMetrics = _repository.GetByPeriodFromAgent(fromTime, toTime, agent.Id);
+
+                foreach (var metric in metrics)
+                {
+                    response.Metrics.Add(_mapper.Map<RamMetricManagerDto>(metric));
+                }
             }
 
             _logger.LogInformation($"Запрос метрик Ram за период с {fromTime} по {toTime} для клстера");
@@ -90,18 +104,23 @@ namespace MetricsManager.Controllers
             [FromRoute] DateTimeOffset toTime,
             [FromRoute] Percentile percentile)
         {
-            var metrics = _repository.GetByPeriodWithSorting(fromTime, toTime, "value");
-
-            var percentileMetric = metrics.Cast<RamMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+            var agents = _agentRepository.GetAll();
 
             var response = new AllRamMetricsResponse() { Metrics = new List<RamMetricManagerDto>() };
+            foreach (var agent in agents)
+            {
+                var metrics = _repository.GetByPeriodWithSortingFromAgent(fromTime, toTime, "value", agent.Id);
 
-            response.Metrics.Add(_mapper.Map<RamMetricManagerDto>(percentileMetric));
+                var percentileMetric = metrics.Cast<RamMetricModel>().SingleOrDefault(i => i.Value == PercentileCalculator.Calculate(GetListValuesFromMetrics(metrics), (double)percentile / 100.0));
+
+                response.Metrics.Add(_mapper.Map<RamMetricManagerDto>(percentileMetric));
+            }
 
             _logger.LogInformation($"Запрос персентиля = {percentile} метрик Ram за период с {fromTime} по {toTime} для кластера");
 
             return Ok(response);
         }
+
         private List<double> GetListValuesFromMetrics(IList<RamMetricModel> metricValues)
         {
             HashSet<double> set = new HashSet<double>();

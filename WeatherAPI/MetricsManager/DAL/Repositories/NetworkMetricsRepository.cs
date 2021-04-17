@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using MetricsManager.DAL.Interfaces;
 using MetricsManager.DAL.Models;
+using MetricsManager.DBSettings;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
@@ -10,61 +12,111 @@ namespace MetricsManager.DAL.Repositories
 { 
     public class NetworkMetricsRepository : INetworkMetricsRepository
     {
-        private SQLiteConnection _connection;
-        public NetworkMetricsRepository(SQLiteConnection connection)
+        /// <summary>
+		/// Объект с именами и настройками базы данных
+		/// </summary>
+		private readonly IDBSettings _dbSettings;
+        private readonly ILogger _logger;
+        public NetworkMetricsRepository(IDBSettings dbSettings, ILogger<CpuMetricsRepository> logger)
         {
-            _connection = connection;
+            _dbSettings = dbSettings;
+            _logger = logger;
             SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         }
 
         public void Create(NetworkMetricModel item)
         {
-            using var connection = new SQLiteConnection(_connection);
-            connection.Execute("INSERT INTO networkmetrics(idagent, value, time) VALUES(@idagent, @value, @time)",
-            new
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
             {
-                idagent = item.IdAgent,
-                value = item.Value,
-                time = item.Time
-            });
+                connection.Execute(
+                    $"INSERT INTO {_dbSettings[Tables.NetworkMetric]}" +
+                    $"({_dbSettings[Columns.AgentId]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.Time]}) " +
+                    $"VALUES(@agentid, @value, @time)",
+                new
+                {
+                    agentid = item.AgentId,
+                    value = item.Value,
+                    time = item.Time.ToUnixTimeSeconds()
+                });
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public void Delete(int id)
         {
-            using var connection = new SQLiteConnection(_connection);
-            connection.Execute("DELETE FROM networkmetrics WHERE id = @id",
-            new
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
             {
-                id = id
-            });
+                connection.Execute(
+                            $"DELETE FROM {_dbSettings[Tables.NetworkMetric]} " +
+                            $"WHERE {_dbSettings[Columns.Id]} = @id",
+                        new
+                        {
+                            id = id
+                        });
+
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public void Update(NetworkMetricModel item)
         {
-            using var connection = new SQLiteConnection(_connection);
-            connection.Execute("UPDATE networkmetrics SET value = @value, time = @time, idagent = @idagent WHERE id = @id",
-            new
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try
             {
-                value = item.Value,
-                time = item.Time,
-                idagent = item.IdAgent,
-                id = item.Id
-            });
+                connection.Execute(
+                            $"UPDATE {_dbSettings[Tables.NetworkMetric]} " +
+                            $"SET {_dbSettings[Columns.Value]} = @value, {_dbSettings[Columns.Time]} = @time, {_dbSettings[Columns.AgentId]} = @agentid " +
+                            $"WHERE {_dbSettings[Columns.Id]} = @id",
+                        new
+                        {
+                            value = item.Value,
+                            time = item.Time,
+                            agentid = item.AgentId,
+                            id = item.Id
+                        });
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                _logger.LogDebug(ex.Message);
+            }
         }
 
         public IList<NetworkMetricModel> GetAll()
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
-                .Query<NetworkMetricModel>("SELECT id, time, value, idagent FROM networkmetrics")
+                .Query<NetworkMetricModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                $"FROM {_dbSettings[Tables.NetworkMetric]}")
                 .ToList();
         }
 
         public NetworkMetricModel GetById(int id)
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
-                .QuerySingle<NetworkMetricModel>("SELECT id, time, value, idagent FROM networkmetrics WHERE id = @id",
+                .QuerySingle<NetworkMetricModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                $"WHERE {_dbSettings[Columns.Id]} = @id",
             new
             {
                 id = id
@@ -73,10 +125,12 @@ namespace MetricsManager.DAL.Repositories
 
         public IList<NetworkMetricModel> GetByPeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
                 .Query<NetworkMetricModel>(
-                    "SELECT id, time, value, idagent From networkmetrics WHERE time > @fromTime AND time < @toTime",
+                    $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                    $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                    $"WHERE {_dbSettings[Columns.Time]} >= @fromTime AND {_dbSettings[Columns.Time]} <= @toTime",
                     new
                     {
                         fromTime = fromTime.ToUnixTimeSeconds(),
@@ -85,15 +139,17 @@ namespace MetricsManager.DAL.Repositories
                 .ToList();
         }
 
-        public IList<NetworkMetricModel> GetByPeriodFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, int idAgent)
+        public IList<NetworkMetricModel> GetByPeriodFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, int agentId)
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
                 .Query<NetworkMetricModel>(
-                    "SELECT id, time, value, idagent From networkmetrics WHERE idagent = @idagent AND (time > @fromtime AND time < @totime)",
+                    $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                    $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                    $"WHERE {_dbSettings[Columns.AgentId]} = @agentid AND ({_dbSettings[Columns.Time]} >= @fromtime AND {_dbSettings[Columns.Time]} <= @totime)",
                     new
                     {
-                        idagent = idAgent,
+                        agentid = agentId,
                         fromTime = fromTime.ToUnixTimeSeconds(),
                         toTime = toTime.ToUnixTimeSeconds()
                     })
@@ -102,9 +158,13 @@ namespace MetricsManager.DAL.Repositories
 
         public IList<NetworkMetricModel> GetByPeriodWithSorting(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField)
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
-                .Query<NetworkMetricModel>($"SELECT * FROM networkmetrics WHERE time > @fromTime AND time < @toTime ORDER BY {sortingField}",
+                .Query<NetworkMetricModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                $"WHERE {_dbSettings[Columns.Time]} >= @fromTime AND {_dbSettings[Columns.Time]} <= @toTime " +
+                $"ORDER BY {sortingField}",
                     new
                     {
                         fromTime = fromTime.ToUnixTimeSeconds(),
@@ -113,18 +173,34 @@ namespace MetricsManager.DAL.Repositories
                 .ToList();
         }
 
-        public IList<NetworkMetricModel> GetByPeriodWithSortingFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField, int idAgent)
+        public IList<NetworkMetricModel> GetByPeriodWithSortingFromAgent(DateTimeOffset fromTime, DateTimeOffset toTime, string sortingField, int agentId)
         {
-            using var connection = new SQLiteConnection(_connection);
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
             return connection
-                .Query<NetworkMetricModel>($"SELECT * FROM networkmetrics WHERE idagent = @idagent AND (time > @fromtime AND time < @totime) ORDER BY {sortingField}",
+                .Query<NetworkMetricModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                $"WHERE {_dbSettings[Columns.AgentId]} = @agentid AND ({_dbSettings[Columns.Time]} >= @fromtime AND {_dbSettings[Columns.Time]} <= @totime) " +
+                $"ORDER BY {sortingField}",
                     new
                     {
-                        idagent = idAgent,
+                        agentid = agentId,
                         fromtime = fromTime.ToUnixTimeSeconds(),
                         totime = toTime.ToUnixTimeSeconds()
                     })
                 .ToList();
+        }
+
+        public NetworkMetricModel GetLast(int agentId)
+        {
+            using var connection = new SQLiteConnection(_dbSettings.ConnectionString);
+            return connection
+                .QuerySingle<NetworkMetricModel>(
+                $"SELECT {_dbSettings[Columns.Id]}, {_dbSettings[Columns.Time]}, {_dbSettings[Columns.Value]}, {_dbSettings[Columns.AgentId]} " +
+                $"FROM {_dbSettings[Tables.NetworkMetric]} " +
+                $"ORDER BY {_dbSettings[Columns.Time]} DESC " +
+                $"LIMIT 1")
+                ?? new NetworkMetricModel();
         }
     }
 }
